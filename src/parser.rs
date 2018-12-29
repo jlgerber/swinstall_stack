@@ -172,6 +172,8 @@ impl SwinstallParser {
 mod tests {
     use super::*;
 
+    use crate::schemas::one::One;
+
     use chrono::{NaiveDateTime};
     use quick_xml::Reader;
     use std::io::BufReader;
@@ -218,7 +220,7 @@ mod tests {
 
 
         fn current_at(&self, reader: &mut Reader<Self::SwBufReader>, datetime: &NaiveDateTime)
-            -> Result<String, ()>
+            -> Result<String, SwInstallError>
         {
             Ok("/foo/bar/bla.yaml_20181124-212211".to_string())
         }
@@ -226,7 +228,7 @@ mod tests {
 
     #[test]
     fn register_schema() {
-        let mycur = MyCurrent {};
+        let mycur = One {};
         let mycur2 = MyCurrent2 {};
         let mut parser = SwinstallParser::new();
         parser.register(Box::new(mycur));
