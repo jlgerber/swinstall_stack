@@ -1,0 +1,1 @@
+pub const DATETIME_FMT: &'static str = "%Y%m%d-%H%M%S";

@@ -8,6 +8,10 @@ use crate::errors::SwInstallError;
 #[derive(Debug)]
 pub struct One;
 
+impl One {
+
+}
+
 impl SwinstallCurrent for One {
     type SwBufReader = BufReader<File>;
 
