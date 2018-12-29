@@ -26,6 +26,9 @@ pub enum SwInstallError {
     Utf8Error,
     #[fail(display = "chrono parse error: {}", _0)]
     ChronoParseError(String),
+    #[fail(display = "runtime error: {}", _0)]
+    RuntimeError(String),
+
 }
 
 impl From<quick_xml::Error> for SwInstallError {
