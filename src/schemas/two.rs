@@ -8,7 +8,7 @@ use quick_xml::events::attributes::Attributes;
 use std::str::from_utf8;
 use crate::constants::DATETIME_FMT;
 use quick_xml::events::Event;
-
+use log::{debug, info, warn};
 /*
 Version 2 schema
 <?xml version="1.0" encoding="UTF-8"?>
@@ -61,12 +61,14 @@ impl Elt {
         //    convert to a vec<u8> ( into_owned())
         //    convert to a str (from_utf8)
         //    convert to a String (to_string)
-        Ok( Elt::new(
+        let elt = Elt::new(
             from_utf8(&action.ok_or(SwInstallError::MissingEltAttribute)?.into_owned())?.to_string(),
             from_utf8(&datetime.ok_or(SwInstallError::MissingEltAttribute)?.into_owned())?.to_string(),
             from_utf8(&hash.ok_or(SwInstallError::MissingEltAttribute)?.into_owned())?.to_string(),
             from_utf8(&version.ok_or(SwInstallError::MissingEltAttribute)?.into_owned())?.to_string(),
-        ))
+        );
+        debug!("elt: {:?}", elt);
+        Ok(elt)
     }
 }
 
@@ -82,6 +84,12 @@ mod tests {
 #[derive(Debug)]
 pub struct Two;
 
+impl Two {
+    pub fn new() -> Self {
+        Two {}
+    }
+}
+
 impl SwinstallCurrent for Two {
     type SwBufReader = BufReader<File>;
 
@@ -94,9 +102,26 @@ impl SwinstallCurrent for Two {
     {
         let mut buf = Vec::new();
         loop {
+
             match reader.read_event(&mut buf) {
-                Ok(Event::Start(ref e)) => {
+                // Ok(Event::Start(ref e)) => {
+                //     if e.name() == b"elt" {
+                //         warn!(
+                //             "elt matched"
+                //         );
+                //         let elt = Elt::from_attrs(e.attributes())?;
+                //         let dt = NaiveDateTime::parse_from_str(elt.datetime.as_str(), DATETIME_FMT)?;
+                //         if dt <= *datetime {
+                //             return Ok(elt.version.clone());
+                //         }
+                //     } else {
+                //         warn!("elt: {:?}", e.name() );
+                //     }
+                // },
+
+                Ok(Event::Empty(ref e)) => {
                     if e.name() == b"elt" {
+                        debug!("Event::Empty - elt tag matched");
                         let elt = Elt::from_attrs(e.attributes())?;
                         let dt = NaiveDateTime::parse_from_str(elt.datetime.as_str(), DATETIME_FMT)?;
                         if dt <= *datetime {
