@@ -3,8 +3,10 @@
 
 use std::collections::HashMap;
 use crate::traits::SwinstallCurrent;
+use std::io::BufReader;
+use std::fs::File;
 
-type SwinstallCurrentRegistry = HashMap<&'static str, Box<dyn SwinstallCurrent>>;
+type SwinstallCurrentRegistry = HashMap<&'static str, Box<dyn SwinstallCurrent<SwBufReader = BufReader<File>>> > ;
 
 #[derive(Debug)]
 pub struct SwinstallParser {
@@ -17,6 +19,7 @@ pub struct SwinstallParser {
 }
 
 impl SwinstallParser {
+
     /// new up an Parser
     pub fn new() -> Self {
         SwinstallParser {
@@ -26,7 +29,7 @@ impl SwinstallParser {
     }
 
     /// Register a struct implementing SwinstallCurrent with registry
-    pub fn register(&mut self, value: Box<dyn SwinstallCurrent>) {
+    pub fn register(&mut self, value: Box<dyn SwinstallCurrent<SwBufReader = BufReader<File>>>) {
         self.registry.insert(value.schema(), value);
     }
 
@@ -41,7 +44,7 @@ impl SwinstallParser {
         true
     }
 
-    pub fn get(&self, schema: &str) -> Option<&Box<dyn SwinstallCurrent>> {
+    pub fn get(&self, schema: &str) -> Option<&Box<dyn SwinstallCurrent<SwBufReader = BufReader<File>>>> {
         self.registry.get(schema)
     }
 }
@@ -55,19 +58,20 @@ mod tests {
     use quick_xml::Reader;
     use std::io::BufReader;
     use std::fs::File;
-    use std::cmp::PartialEq;
 
     #[derive(Debug)]
     struct MyCurrent;
 
 
     impl SwinstallCurrent for MyCurrent {
+        type SwBufReader = BufReader<File>;
+
         //const SCHEMA: &'static str = "1";
         fn schema(&self) -> &'static str {
             "1"
         }
 
-        fn current(&self, reader: &mut Reader<BufReader<File>>) -> Result<String,()> {
+        fn current(&self, reader: &mut Reader<Self::SwBufReader>) -> Result<String,()> {
              Ok("/foo/bar/bla.yaml_20181123-090200".to_string())
         }
 
@@ -84,12 +88,14 @@ mod tests {
     struct MyCurrent2;
 
     impl SwinstallCurrent for MyCurrent2 {
+        type SwBufReader = BufReader<File>;
+
         //const SCHEMA: &'static str = "2";
         fn schema(&self) -> &'static str {
             "2"
         }
-
-        fn current(&self, reader: &mut Reader<BufReader<File>>) -> Result<String,()> {
+//BufReader<File>
+        fn current(&self, reader: &mut Reader<Self::SwBufReader>) -> Result<String,()> {
              Ok("/foo/bar/bla.yaml_20181123-090200".to_string())
         }
 
