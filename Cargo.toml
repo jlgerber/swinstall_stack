@@ -1,0 +1,10 @@
+[package]
+name = "swinstall_stack"
+version = "0.1.0"
+authors = ["jonathan gerber <jlgerber@gmail.com>"]
+edition = "2018"
+
+[dependencies]
+quick-xml = "0.13.1"
+chrono = "0.4.6"
+failure = "0.1.3"
