@@ -1,3 +1,7 @@
+//! Utilities
+//!
+//! Standalone helper functions
+//!
 use std::path::{PathBuf};
 use crate::errors::SwInstallError;
 
@@ -12,15 +16,21 @@ pub fn swinstall_stack_from_versionless(filepath: &str) -> Result<String,SwInsta
                       .ok_or(SwInstallError::ConvertOsStrFail)?;
 
     let mut pb = pb.to_path_buf();
+
     pb.pop(); // pop off the file name since we dont need it in the path
     pb.push("bak");
     pb.push(file_name);
     pb.push(format!("{}_swinstall_stack", file_name));
+
     let result = pb.to_str()
       .ok_or(SwInstallError::Utf8Error)?.to_string();
+
     Ok(result)
 }
 
+/// Given a filepath to a versionless swinstalled file, and a str representing a specific version
+/// whose makeup is determined by the swinstall_stack schema, construct a full path to a
+/// versioned file
 pub fn versioned_from_versionless(filepath: &str, version: &str) -> Result<String,SwInstallError> {
     let  pb = PathBuf::from(filepath);
 
@@ -30,12 +40,15 @@ pub fn versioned_from_versionless(filepath: &str, version: &str) -> Result<Strin
                       .ok_or(SwInstallError::ConvertOsStrFail)?;
 
     let mut pb = pb.to_path_buf();
+
     pb.pop(); // pop off the file name since we dont need it in the path
     pb.push("bak");
     pb.push(file_name);
     pb.push(format!("{}_{}", file_name, version));
+
     let result = pb.to_str()
       .ok_or(SwInstallError::Utf8Error)?.to_string();
+
     Ok(result)
 }
 

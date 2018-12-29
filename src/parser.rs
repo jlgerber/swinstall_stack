@@ -33,12 +33,12 @@ use std::collections::HashMap;
 use crate::traits::SwinstallCurrent;
 use std::io::BufReader;
 use std::fs::File;
-use chrono::{NaiveDateTime};
+use chrono::{NaiveDateTime, Local};
 use std::path::{Path, PathBuf};
 use quick_xml::Reader;
 use quick_xml::events::Event;
 use quick_xml::events::BytesStart;
-
+use log::{debug};
 use crate::SwInstallError;
 
 type SwReader = Reader<BufReader<File>>;
@@ -102,7 +102,7 @@ impl SwinstallParser {
         // unwrap path, returning error if appropriate
         let path = path.ok_or(SwInstallError::NoPathInXml)?;
         let elt_reader = self.get(&schema.as_str()).unwrap();
-
+        debug!("calling current_at");
         // get back the version string of the current file
         let result = elt_reader.current_at(reader, datetime)?;
 
@@ -137,6 +137,11 @@ impl SwinstallParser {
                     .ok_or(SwInstallError::ConvertOsStrFail)?
                     .to_string();
         Ok(path)
+    }
+
+    pub fn current(&self, swinstall_stack: &str) -> Result<String, failure::Error> {
+        let dt = Local::now().naive_local();
+        self.current_at(swinstall_stack, &dt)
     }
 
     pub fn current_at(&self, swinstall_stack: &str, datetime: &NaiveDateTime) -> Result<String, failure::Error> {
