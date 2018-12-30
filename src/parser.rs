@@ -1,19 +1,7 @@
 //! parse the swinstall_stack xml file and invoke the appropriate SwinstallCurrent trait implementor.
 //!
 //!
-/*
-version 1 schema
-<?xml version="1.0" encoding="UTF-8"?>
-<stack_history path="/Users/jonathangerber/src/python/swinstall_proposal/examples/schema1/bak/packages.xml/packages.xml_swinstall_stack">
-   <elt is_current="False" version="20181220-090624"/>
-   <elt is_current="False" version="20181220-090616"/>
-   <elt is_current="False" version="20181220-090608"/>
-   <elt is_current="False" version="20181220-090333"/>
-   <elt is_current="True" version="20161213-093146_r575055"/>
-   <elt is_current="False" version="20181220-091955"/>
-   <elt is_current="False" version="20181220-092031"/>
-</stack_history
-*/
+
 
 use chrono::{ NaiveDateTime, Local };
 use crate::SwInstallError;
@@ -94,8 +82,9 @@ impl SwinstallParser {
 
         // unwrap path, returning error if appropriate
         let path = path.ok_or(SwInstallError::NoPathInXml)?;
-        let elt_reader = self.get(&schema.as_str()).unwrap();
-        debug!("calling current_at");
+        debug!("fetching elt_reader for schema: {}", schema.as_str());
+        let elt_reader = self.get(&schema.as_str()).ok_or(SwInstallError::RuntimeError(format!("Unable to get reader for schema: {}", schema.as_str())))?;
+        debug!("calling elt_reader.current_at(reader, {})", datetime);
         // get back the version string of the current file
         let result = elt_reader.current_at(reader, datetime)?;
 
@@ -148,6 +137,7 @@ impl SwinstallParser {
             match reader.read_event(&mut buf) {
                 Ok(Event::Start(ref e)) => {
                     if e.name() == b"stack_history" {
+                        debug!("current_at - calling self.dispatch_read");
                         // we found a current file or we errored
                         return self.dispatch_read(&mut reader, e, datetime);
                     }
