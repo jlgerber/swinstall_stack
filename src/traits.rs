@@ -32,6 +32,12 @@
 use chrono::{NaiveDateTime, Local};
 use crate::errors::SwInstallError;
 use quick_xml::Reader;
+use std::fmt::Debug;
+use quick_xml::events::attributes::Attributes;
+
+pub trait SwInstallElement: Debug + PartialEq + Eq + Sized {
+    fn from_attrs<'a>(attrs: Attributes<'a>) -> Result<Self, SwInstallError>;
+}
 
 pub trait SwinstallCurrent: std::fmt::Debug  {
     type SwBufReader;

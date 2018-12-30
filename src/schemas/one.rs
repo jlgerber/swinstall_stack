@@ -57,7 +57,7 @@
 use chrono::{ NaiveDateTime };
 use crate::constants::DATETIME_FMT;
 use crate::errors::SwInstallError;
-use crate::traits::SwinstallCurrent;
+use crate::traits::{ SwinstallCurrent, SwInstallElement };
 use std::{
     fs::File,
     io::BufReader,
@@ -87,8 +87,10 @@ impl Elt {
             is_current, version, revision
         }
     }
+}
+impl SwInstallElement for Elt {
 
-    pub fn from_attrs<'a>(attrs: Attributes<'a>) -> Result<Elt, SwInstallError> {
+    fn from_attrs<'a>(attrs: Attributes<'a>) -> Result<Elt, SwInstallError> {
         let mut is_current = None;
         let mut version = None;
 
