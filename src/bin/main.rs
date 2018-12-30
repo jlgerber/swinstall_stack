@@ -11,7 +11,7 @@ use swinstall_stack::{
     constants::{DEFAULT_LOG_LEVEL, VERBOSE_LOG_LEVEL},
     errors::SwInstallError,
     parser::SwinstallParser,
-    schemas::two,
+    schemas::{ one, two },
     utils::swinstall_stack_from_versionless,
 };
 
@@ -91,19 +91,26 @@ fn main() -> Result<(), Error> {
     let mut parser = SwinstallParser::new();
 
     // create schemas and register them with the parser
+    let schema1 = one::One::new();
     let schema2 = two::Two::new();
+
+    parser.register(Box::new(schema1));
     parser.register(Box::new(schema2));
+
     // set a default schema to be used in the event that the swinstall_stack
     // does not
-    parser.set_default_schema(String::from("2"));
+    parser.set_default_schema(String::from("1"));
 
     let date = get_date(opt.date)?;
     let time = get_time(opt.time)?;
     // now create the datetime
     let datetime_at = NaiveDateTime::new(date, time);
-
+    let input_path = opt.input
+                     .to_str()
+                     .ok_or(SwInstallError::RuntimeError("unable to unwrap opt.input".to_string()))?;
     // optparse should guarantee that opt.input can be unwrapped
-    let swinstall_stack = swinstall_stack_from_versionless(opt.input.to_str().unwrap())?;
+    let swinstall_stack = swinstall_stack_from_versionless(input_path)?;
+    debug!("swinstall_stack: {}", swinstall_stack.as_str());
     let path =  parser.current_at(swinstall_stack.as_str(), &datetime_at)?;
     println!("\npath: {}\n", path);
     Ok(())
