@@ -53,6 +53,30 @@ pub fn versioned_from_versionless(filepath: &str, version: &str) -> Result<Strin
     Ok(result)
 }
 
+/// Given the full path to the swinstall_stack and a version string, construct the full path to
+/// the versioned swinstalled file.
+pub fn versioned_from_swinstall_stack(filepath: &str, version: &str) -> Result<String,SwInstallError> {
+    let  mut pb = PathBuf::from(filepath);
+    pb.pop(); // remove swinstall_stack
+    // get versionless directory name
+    let file_name = pb.file_name()
+                      .ok_or(SwInstallError::NoFileNameFromPath)?
+                      .to_str()
+                      .ok_or(SwInstallError::ConvertOsStrFail)?;
+
+    let mut pb = pb.to_path_buf();
+
+    pb.pop(); // pop off the file name since we dont need it in the path
+    pb.push("bak");
+    pb.push(file_name);
+    pb.push(format!("{}_{}", file_name, version));
+
+    let result = pb.to_str()
+      .ok_or(SwInstallError::Utf8Error(filepath.to_string()))?.to_string();
+
+    Ok(result)
+}
+
 
 #[cfg(test)]
 mod tests {
