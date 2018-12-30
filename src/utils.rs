@@ -23,7 +23,7 @@ pub fn swinstall_stack_from_versionless(filepath: &str) -> Result<String,SwInsta
     pb.push(format!("{}_swinstall_stack", file_name));
 
     let result = pb.to_str()
-      .ok_or(SwInstallError::Utf8Error)?.to_string();
+      .ok_or(SwInstallError::Utf8Error(filepath.to_string()))?.to_string();
 
     Ok(result)
 }
@@ -47,7 +47,7 @@ pub fn versioned_from_versionless(filepath: &str, version: &str) -> Result<Strin
     pb.push(format!("{}_{}", file_name, version));
 
     let result = pb.to_str()
-      .ok_or(SwInstallError::Utf8Error)?.to_string();
+      .ok_or(SwInstallError::Utf8Error(filepath.to_string()))?.to_string();
 
     Ok(result)
 }
