@@ -12,3 +12,5 @@ test:
 
 check:
 	cargo check
+
+all: build install
