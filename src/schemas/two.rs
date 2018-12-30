@@ -102,23 +102,7 @@ impl SwinstallCurrent for Two {
     {
         let mut buf = Vec::new();
         loop {
-
             match reader.read_event(&mut buf) {
-                // Ok(Event::Start(ref e)) => {
-                //     if e.name() == b"elt" {
-                //         warn!(
-                //             "elt matched"
-                //         );
-                //         let elt = Elt::from_attrs(e.attributes())?;
-                //         let dt = NaiveDateTime::parse_from_str(elt.datetime.as_str(), DATETIME_FMT)?;
-                //         if dt <= *datetime {
-                //             return Ok(elt.version.clone());
-                //         }
-                //     } else {
-                //         warn!("elt: {:?}", e.name() );
-                //     }
-                // },
-
                 Ok(Event::Empty(ref e)) => {
                     if e.name() == b"elt" {
                         debug!("Event::Empty - elt tag matched");
@@ -140,7 +124,5 @@ impl SwinstallCurrent for Two {
             // if we don't keep a borrow elsewhere, we can clear the buffer to keep memory usage low
             buf.clear();
         }
-
-        Ok("/foo/bar/bla.yaml_1".to_string())
     }
 }
