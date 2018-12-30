@@ -1,5 +1,5 @@
 use chrono::{Datelike, Timelike, Local, NaiveDate, NaiveTime, NaiveDateTime};
-use env_logger;
+use env_logger::{self, Builder, Env};
 use failure::Error;
 use log::{debug, info, warn, error};
 use std::{
@@ -7,6 +7,7 @@ use std::{
 };
 use structopt::StructOpt;
 use swinstall_stack::{
+    constants::{DEFAULT_LOG_LEVEL, VERBOSE_LOG_LEVEL},
     errors::SwInstallError,
     parser::SwinstallParser,
     schemas::two,
@@ -14,9 +15,8 @@ use swinstall_stack::{
     utils::swinstall_stack_from_versionless,
 };
 
-
 #[derive(Debug, StructOpt)]
-#[structopt(name = "swinst", about = "Introspect swinstall_stack")]
+#[structopt(name = "swinst", about = "Introspect swinstall_stack, given an swinstalled file.")]
 struct Opt {
     /// Activate debug mode
     #[structopt(short = "v", long = "verbose")]
@@ -80,16 +80,21 @@ fn get_time(time: Option<String>) -> Result<NaiveTime, SwInstallError> {
 }
 
 fn main() -> Result<(), Error> {
-    env_logger::init();
 
     let opt = Opt::from_args();
-
+    if opt.verbose {
+       Builder::from_env(Env::default().default_filter_or(VERBOSE_LOG_LEVEL)).init();
+    } else {
+        Builder::from_env(Env::default().default_filter_or(DEFAULT_LOG_LEVEL)).init();
+    }
+    // create a parser
     let mut parser = SwinstallParser::new();
 
-    // create schemas
+    // create schemas and register them with the parser
     let schema2 = two::Two::new();
     parser.register(Box::new(schema2));
-
+    // set a default schema to be used in the event that the swinstall_stack
+    // does not
     parser.set_default_schema(String::from("2"));
 
     let date = get_date(opt.date)?;
