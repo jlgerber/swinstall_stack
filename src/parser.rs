@@ -1,11 +1,12 @@
 //! parse the swinstall_stack xml file and invoke the appropriate SwinstallCurrent trait implementor.
 //!
-//!
-
 
 use chrono::{ NaiveDateTime, Local };
-use crate::SwInstallError;
-use crate::traits::SwinstallCurrent;
+use crate::{
+    SwInstallError,
+    traits::SwinstallCurrent,
+    utils::versioned_from_swinstall_stack
+};
 use log::{debug};
 use std::{
     collections::HashMap,
@@ -61,64 +62,35 @@ impl SwinstallParser {
     }
 
     /// Retrieve the SwinstallComponent registered against a paritcular schema.
-    pub fn get(&self, schema: &str) -> Option<&Box<dyn SwinstallCurrent<SwBufReader = BufReader<File>>>> {
+    pub fn get_component(&self, schema: &str) -> Option<&Box<dyn SwinstallCurrent<SwBufReader = BufReader<File>>>> {
         self.registry.get(schema)
     }
 
-    // dispatch the read of a series of elt tags
-    fn dispatch_read<'a>(&self, reader: &mut SwReader, e: &'a BytesStart, datetime: &NaiveDateTime) -> Result<String, failure::Error> {
-         // get schema
-        let mut schema = self.default_schema.clone().ok_or(SwInstallError::NoDefaultSchema)?;
-        // get schema and path from attributes
-        let  mut path = None;
+    // retrieve the schema
+    fn get_schema<'a>(&self,  e: &'a BytesStart) -> Result<String, SwInstallError> {
+         let mut schema = self.default_schema.clone().ok_or(SwInstallError::NoDefaultSchema)?;
+
+        // get schema  from attributes
         for attr in e.attributes() {
             let attr = attr?;
             if attr.key == b"schema" {
                 schema = std::str::from_utf8(&attr.value.into_owned())?.to_string();
-            } else if attr.key == b"path" {
-                path =  Some(std::str::from_utf8(&attr.value.into_owned())?.to_string());
             }
         }
-
-        // unwrap path, returning error if appropriate
-        let path = path.ok_or(SwInstallError::NoPathInXml)?;
         debug!("fetching elt_reader for schema: {}", schema.as_str());
-        let elt_reader = self.get(&schema.as_str()).ok_or(SwInstallError::RuntimeError(format!("Unable to get reader for schema: {}", schema.as_str())))?;
+
+        Ok(schema)
+    }
+
+    // Get the current version as a String
+    fn get_current_version<'a>(&self, reader: &mut SwReader, schema: &str, datetime: &NaiveDateTime) -> Result<String, failure::Error> {
+
+        let elt_reader = self.get_component(schema).ok_or(SwInstallError::RuntimeError(format!("Unable to get reader for schema: {}", schema)))?;
         debug!("calling elt_reader.current_at(reader, {})", datetime);
+
         // get back the version string of the current file
         let result = elt_reader.current_at(reader, datetime)?;
-
-        // construct the full path to the file
-        let path = PathBuf::from(path);
-
-        // get parent directory
-        // foo/bak/bar.yaml/bar.yaml_swinstall_stack -> foo/bak/bar.yaml
-        let path_parent = path.parent()
-                        .ok_or(SwInstallError::NoParentFromPath)?;
-
-        // get file name
-        // foo/bak/bar.yaml/bar.yaml_swinstall_stack -> bar.yaml
-        let base_filename = path_parent
-                        .file_name()
-                        .ok_or(SwInstallError::NoFileNameFromPath)?
-                        .to_str()
-                        .ok_or(SwInstallError::ConvertOsStrFail)?;
-
-        // convert path parent to PathBuf so that we can tack on the new file name
-        let mut path_parent = path_parent.to_path_buf();
-
-        // construct filename
-        let filename = format!("{}_{}", base_filename, result);
-        path_parent.push(filename);
-
-        // convert path back to string
-        let path = path_parent
-                    .into_os_string();
-        let path = path
-                    .to_str()
-                    .ok_or(SwInstallError::ConvertOsStrFail)?
-                    .to_string();
-        Ok(path)
+        Ok(result)
     }
 
     /// Retrieve the path to the file marked current in the supplied swinstall_stack.
@@ -137,9 +109,16 @@ impl SwinstallParser {
             match reader.read_event(&mut buf) {
                 Ok(Event::Start(ref e)) => {
                     if e.name() == b"stack_history" {
-                        debug!("current_at - calling self.dispatch_read");
-                        // we found a current file or we errored
-                        return self.dispatch_read(&mut reader, e, datetime);
+                        // get schema version
+                        let schema = self.get_schema(&e)?;
+
+                        debug!("current_at - calling self.get_current_version(...)");
+                        // we find a current file or we error
+                        let version_string = self.get_current_version(&mut reader, schema.as_str(), datetime)?;
+                        // we construct the full path to the versioned file out of the full path to the swinstall_stack
+                        // and the version_string
+                        let versioned_file = versioned_from_swinstall_stack(swinstall_stack, version_string.as_str())?;
+                        return Ok(versioned_file);
                     }
                 },
                 // we never found stack_history
@@ -153,7 +132,6 @@ impl SwinstallParser {
             // if we don't keep a borrow elsewhere, we can clear the buffer to keep memory usage low
             buf.clear();
         }
-        //Ok(String::from("test"))
     }
 
 }
@@ -236,13 +214,13 @@ mod tests {
         parser.register(Box::new(mycur));
         parser.register(Box::new(mycur2));
 
-        if let Some(result) = parser.get("2") {
+        if let Some(result) = parser.get_component("2") {
             assert_eq!(result.schema(), "2");
         } else {
             panic!("unable to get schema 2");
         };
 
-        if let Some(result) = parser.get("1") {
+        if let Some(result) = parser.get_component("1") {
             assert_eq!(result.schema(), "1");
         } else {
             panic!("unable to get schema 1");
