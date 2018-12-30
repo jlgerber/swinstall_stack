@@ -48,7 +48,6 @@ pub trait SwinstallCurrent: std::fmt::Debug  {
         self.current_at(reader, &now)
     }
 
-
     /// Retrieve the version string of the current resource at the provided datetime, given a reader
     /// that points at one or more elt tags within the swinstall_stack xml document.
     ///
