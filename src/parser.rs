@@ -67,7 +67,7 @@ impl SwinstallParser {
     }
 
     // retrieve the schema
-    fn get_schema<'a>(&self,  e: &'a BytesStart) -> Result<String, SwInstallError> {
+    fn schema<'a>(&self,  e: &'a BytesStart) -> Result<String, SwInstallError> {
          let mut schema = self.default_schema.clone().ok_or(SwInstallError::NoDefaultSchema)?;
 
         // get schema  from attributes
@@ -83,7 +83,7 @@ impl SwinstallParser {
     }
 
     // Get the current version as a String
-    fn get_current_version<'a>(&self, reader: &mut SwReader, schema: &str, datetime: &NaiveDateTime) -> Result<String, failure::Error> {
+    fn current_version<'a>(&self, reader: &mut SwReader, schema: &str, datetime: &NaiveDateTime) -> Result<String, failure::Error> {
 
         let elt_reader = self.get_component(schema).ok_or(SwInstallError::RuntimeError(format!("Unable to get reader for schema: {}", schema)))?;
         debug!("calling elt_reader.current_at(reader, {})", datetime);
@@ -110,11 +110,11 @@ impl SwinstallParser {
                 Ok(Event::Start(ref e)) => {
                     if e.name() == b"stack_history" {
                         // get schema version
-                        let schema = self.get_schema(&e)?;
+                        let schema = self.schema(&e)?;
 
-                        debug!("current_at - calling self.get_current_version(...)");
+                        debug!("current_at - calling self.current_version(...)");
                         // we find a current file or we error
-                        let version_string = self.get_current_version(&mut reader, schema.as_str(), datetime)?;
+                        let version_string = self.current_version(&mut reader, schema.as_str(), datetime)?;
                         // we construct the full path to the versioned file out of the full path to the swinstall_stack
                         // and the version_string
                         let versioned_file = versioned_from_swinstall_stack(swinstall_stack, version_string.as_str())?;
