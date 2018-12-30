@@ -1,9 +1,37 @@
-
+//! Part of swinstall_stack
+//!
+//! traits.rs
+//!
+//! Define traits used in the project. Currently, there is one: `SwinstallCurrent`.
+//!
+//! ```SwinstallCurrent``` defines the interface for introspecting swinstall_stack xml
+//! files; speficically, for looping over a number of elt tags, parsing them via
+//! quick-xml, and identifying the contents.
+//!
+//! There are three major responsibilities of this trait:
+//!
+//!     - identifying the schema version of the swinstall_stack xml file
+//!     - retrieving the current swinstalled file tracked in the swinstall_stack
+//!     - retrieving the file swinstalled on the date and time closest to but not
+//!       exceeding that provided by the user
+//!
+//! Because swinstall_stack maintains a registry of SwinstallCurrent trait objects,
+//! allowing us to parse multiple different schema versions from the same runtime,
+//! identified at runtime via the outer *stack_history's schema_version* attribute,
+//! there are a number of constraints imposed by Rusts notion of object safety. These
+//! include disallowing trait objects from using Generic parameters. Thus, we are forced
+//! to define generic parameters in terms of an associated type, SwBufReader.
+//!
+//! Unfortunately, this has a side effect of being unable to test the crate with
+//! xml strings. We have to create actual xml files and feed them to the tests. Not a
+//! big deal, but a bit of a pain.
+//!
+//! Another approach might have been to define the different schema structs as an enum,
+//! but I didn't want to pattern match against each enum branch for each elt tag,
+//! as the each xml file should have a uniform elt tag structure based on its schema.
 use chrono::{NaiveDateTime, Local};
-use quick_xml::Reader;
-use std::io::BufReader;
-use std::fs::File;
 use crate::errors::SwInstallError;
+use quick_xml::Reader;
 
 pub trait SwinstallCurrent: std::fmt::Debug  {
     type SwBufReader;

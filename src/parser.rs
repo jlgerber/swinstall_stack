@@ -15,34 +15,22 @@ version 1 schema
 </stack_history
 */
 
-/*
-Version 2 schema
-<?xml version="1.0" encoding="UTF-8"?>
-<stack_history path="/Users/jonathangerber/src/python/swinstall_proposal/examples/schema2/bak/packages.xml/packages.xml_swinstall_stack" schema="2">
-   <elt action="install" datetime="20181221-142313" hash="c618755af9b63728411bc536d2c60cf2" version="5"/>
-   <elt action="install" datetime="20181221-142248" hash="5c8fdabe2ae7fa9287c0672b88ef6593" version="4"/>
-   <elt action="rollback" datetime="20181221-102242" hash="294fc86579b14b7d39" version="1"/>
-   <elt action="rollback" datetime="20181221-102242" hash="c94f6266789a483a43" version="2"/>
-   <elt action="install" datetime="20180702-144204" hash="194f835569a79ba433" version="3"/>
-   <elt action="install" datetime="20180101-103813" hash="c94f6266789a483a43" version="2"/>
-   <elt action="install" datetime="20171106-104603" hash="294fc86579b14b7d39" version="1"/>
-</stack_history>
-*/
-
-use std::collections::HashMap;
-use crate::traits::SwinstallCurrent;
-use std::io::BufReader;
-use std::fs::File;
-use chrono::{NaiveDateTime, Local};
-use std::path::{Path, PathBuf};
-use quick_xml::Reader;
-use quick_xml::events::Event;
-use quick_xml::events::BytesStart;
-use log::{debug};
+use chrono::{ NaiveDateTime, Local };
 use crate::SwInstallError;
+use crate::traits::SwinstallCurrent;
+use log::{debug};
+use std::{
+    collections::HashMap,
+    io::BufReader,
+    fs::File,
+    path::{Path, PathBuf},
+};
+use quick_xml::{
+    events::{ BytesStart, Event },
+    Reader,
+};
 
 type SwReader = Reader<BufReader<File>>;
-
 type SwinstallCurrentRegistry = HashMap<&'static str, Box<dyn SwinstallCurrent<SwBufReader = BufReader<File>>> > ;
 
 #[derive(Debug)]

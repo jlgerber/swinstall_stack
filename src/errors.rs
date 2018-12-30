@@ -1,9 +1,10 @@
-use failure::Error;
-use failure::Fail;
-use std::convert::From;
-use std::str::Utf8Error;
 use chrono::format::ParseError;
-use std::num::ParseIntError;
+use failure::Fail;
+use std::{
+    convert::From,
+    num::ParseIntError,
+    str::Utf8Error,
+};
 
 #[derive(Debug, Fail)]
 pub enum SwInstallError {
