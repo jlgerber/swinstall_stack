@@ -1,6 +1,7 @@
 use chrono::{Datelike, Timelike, Local, NaiveDate, NaiveTime, NaiveDateTime};
 use env_logger::{self, Builder, Env};
 use failure::Error;
+#[allow(unused_imports)]
 use log::{debug, info, warn, error};
 use std::{
     path::PathBuf
@@ -11,7 +12,6 @@ use swinstall_stack::{
     errors::SwInstallError,
     parser::SwinstallParser,
     schemas::two,
-    traits::SwinstallCurrent,
     utils::swinstall_stack_from_versionless,
 };
 
