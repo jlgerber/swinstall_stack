@@ -1,33 +1,78 @@
-use crate::traits::SwinstallCurrent;
-use std::io::BufReader;
-use std::fs::File;
-use chrono::{NaiveDateTime};
-use quick_xml::Reader;
-use crate::errors::SwInstallError;
-use quick_xml::events::attributes::Attributes;
-use std::str::from_utf8;
+//!
+//! one.rs
+//!
+//! Implementation of traits::SwinstallCurrent
+//! This module provides the code to operate on schema v1
+//! swinstall_stack xml stores.
+//!
+//! # Details
+//!
+//! swinstall_store xml files are  stored, along with versioned files,
+//! in a special directory structure which lives along side swinstalled
+//! files on disk.
+//!
+//! For a given file, <filname>.<ext>, witin a parent directory, swinstall
+//! creates a ```bak``` directory. Within the ```bak``` directory, swinstall
+//! creates a ```<filename>.<ext>``` directory. Within this directory, swinstall
+//! places both versioned file installs and the swinstall_stack xml file to
+//! journal installations.
+//!
+//! swinstall_store files obey the following naming convention:
+//! ```
+//! <filename>.<ext>_swinstall_store
+//! ```
+//!
+//! versioned files are named thusly:
+//!
+//! ```
+//! <filename>.<ext>_<version>
+//! ```
+//!
+//! # V1 swinstall_stack xml example
+//!
+//! ```xml
+//! <stack_history path="/dd/facility/etc/bak/packages.xml/packages.xml_swinstall_stack">
+//!   <elt is_current="False" version="20181220-090624"/>
+//!   <elt is_current="False" version="20181220-090616"/>
+//!   <elt is_current="False" version="20181220-090608"/>
+//!   <elt is_current="False" version="20181220-090333"/>
+//!   <elt is_current="True" version="20161213-093146_r575055"/>
+//!   <elt is_current="False" version="20181220-091955"/>
+//!   <elt is_current="False" version="20181220-092031"/>
+//! </stack_history
+//! ```
+//!
+//! # Problems with this design
+//!
+//! There are a number of issues with this original schema design:
+//!
+//! - Rollbacks / Rollforwards alter is_current settings in the stack without
+//!   recording change dates resulting in lossy history. One cannot reconstruct the
+//!   sequence of events which resulted in the current state if rollbacks have occured.
+//! - new versions are appended to the end of stack_history, making non-pathological
+//!   use cases take O(n) time for lookups (bad design)
+//! - version stores both a date-time stamp and an optional VCS revision id
+//!
+
+use chrono::{ NaiveDateTime };
 use crate::constants::DATETIME_FMT;
-use quick_xml::events::Event;
+use crate::errors::SwInstallError;
+use crate::traits::SwinstallCurrent;
+use std::{
+    fs::File,
+    io::BufReader,
+    str::{ FromStr, from_utf8, }
+};
 #[allow(unused_imports)]
 use log::{debug, info, warn};
-use std::str::FromStr;
+use quick_xml::{
+    events::{attributes::Attributes, Event, },
+    Reader,
+};
 
-/*
-version 1 schema
-<?xml version="1.0" encoding="UTF-8"?>
-<stack_history path="/Users/jonathangerber/src/python/swinstall_proposal/examples/schema1/bak/packages.xml/packages.xml_swinstall_stack">
-   <elt is_current="False" version="20181220-090624"/>
-   <elt is_current="False" version="20181220-090616"/>
-   <elt is_current="False" version="20181220-090608"/>
-   <elt is_current="False" version="20181220-090333"/>
-   <elt is_current="True" version="20161213-093146_r575055"/>
-   <elt is_current="False" version="20181220-091955"/>
-   <elt is_current="False" version="20181220-092031"/>
-</stack_history
-*/
-
+/// Model the elt tag contents from swinstall_log
 #[derive(Debug)]
-struct Elt {
+pub struct Elt {
     pub is_current: bool,
     pub version: String,
     pub revision: Option<String>,
