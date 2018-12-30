@@ -3,7 +3,7 @@ use failure::Fail;
 use std::{
     convert::From,
     num::ParseIntError,
-    str::Utf8Error,
+    str::{ Utf8Error, ParseBoolError },
 };
 
 #[derive(Debug, Fail)]
@@ -36,6 +36,8 @@ pub enum SwInstallError {
     InvalidTime(String),
     #[fail(display = "ParseIntError - failed to parse int: {}", _0)]
     ParseIntError(String),
+    #[fail(display = "ParseBoolError - failed to parse bool: {}", _0)]
+    ParseBoolError(String),
 }
 
 impl From<quick_xml::Error> for SwInstallError {
@@ -52,12 +54,18 @@ impl From<Utf8Error> for SwInstallError {
 
 impl From<ParseError> for SwInstallError {
     fn from(error: ParseError) -> Self {
-        SwInstallError::ChronoParseError(error.cause().unwrap().to_string())
+        SwInstallError::ChronoParseError(error.to_string())
     }
 }
 
 impl From<std::num::ParseIntError> for SwInstallError {
     fn from(error: ParseIntError) -> Self {
         SwInstallError::ParseIntError(error.to_string())
+    }
+}
+
+impl From<ParseBoolError> for SwInstallError {
+    fn from(error: ParseBoolError) -> Self {
+        SwInstallError::ParseBoolError(error.to_string())
     }
 }
