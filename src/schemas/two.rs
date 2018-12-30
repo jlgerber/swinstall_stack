@@ -8,6 +8,7 @@ use quick_xml::events::attributes::Attributes;
 use std::str::from_utf8;
 use crate::constants::DATETIME_FMT;
 use quick_xml::events::Event;
+#[allow(unused_imports)]
 use log::{debug, info, warn};
 /*
 Version 2 schema
