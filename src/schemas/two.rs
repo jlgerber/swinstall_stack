@@ -1,28 +1,57 @@
-use crate::traits::SwinstallCurrent;
-use std::io::BufReader;
-use std::fs::File;
+//! two.rs
+//!
+//! Implementation of traits::SwinstallCurrent for revised schema (version 2) of
+//! swinstall_stack xml file. The redesign's goals are to:
+//!
+//! - make current lookups *practically* O(1) on average (by reordering)
+//! - preserve installation history for rollbacks / rollforwards
+//! - distinguish version number from installation timestamp to avoid the
+//!   need to reinstall files for rollback / rollforward
+//! - store file hash to help identify post-install mutations
+//!
+//! # Details
+//!
+//! The original swinstall_stack design (schema 1) has a number of flaws:
+//! - new installations are appended to the end of a list of installations, requiring
+//!   the traversal of the list for average / normal lookups. Normal running time
+//!   is O(n).
+//! - rollbacks / rollforwards are lossy. One cannot acurately piece together a
+//!   timeline of their application. In the event of a rollback/forward, an is_current flag
+//!   is simply updated in the elements on the stack.
+//! - timestamp and revision id are conflated in a single field (denormalization)
+//!
+//!
+//! # Example version 2 schema
+//!
+//! ```xml
+//! <stack_history path="/Users/jonathangerber/src/python/swinstall_proposal/examples/schema2/bak/packages.xml/packages.xml_swinstall_stack" schema="2">
+//!   <elt action="install" datetime="20181221-142313" hash="c618755af9b63728411bc536d2c60cf2" version="5"/>
+//!   <elt action="install" datetime="20181221-142248" hash="5c8fdabe2ae7fa9287c0672b88ef6593" version="4"/>
+//!   <elt action="rollback" datetime="20181221-102242" hash="294fc86579b14b7d39" version="1"/>
+//!   <elt action="rollback" datetime="20181221-102242" hash="c94f6266789a483a43" version="2"/>
+//!   <elt action="install" datetime="20180702-144204" hash="194f835569a79ba433" version="3"/>
+//!   <elt action="install" datetime="20180101-103813" hash="c94f6266789a483a43" version="2"/>
+//!   <elt action="install" datetime="20171106-104603" hash="294fc86579b14b7d39" version="1"/>
+//! </stack_history>
+//! ```
+
 use chrono::{NaiveDateTime};
-use quick_xml::Reader;
-use crate::errors::SwInstallError;
-use quick_xml::events::attributes::Attributes;
-use std::str::from_utf8;
-use crate::constants::DATETIME_FMT;
-use quick_xml::events::Event;
+use crate::{
+    constants::DATETIME_FMT,
+    errors::SwInstallError,
+    traits::SwinstallCurrent,
+};
 #[allow(unused_imports)]
-use log::{debug, info, warn};
-/*
-Version 2 schema
-<?xml version="1.0" encoding="UTF-8"?>
-<stack_history path="/Users/jonathangerber/src/python/swinstall_proposal/examples/schema2/bak/packages.xml/packages.xml_swinstall_stack" schema="2">
-   <elt action="install" datetime="20181221-142313" hash="c618755af9b63728411bc536d2c60cf2" version="5"/>
-   <elt action="install" datetime="20181221-142248" hash="5c8fdabe2ae7fa9287c0672b88ef6593" version="4"/>
-   <elt action="rollback" datetime="20181221-102242" hash="294fc86579b14b7d39" version="1"/>
-   <elt action="rollback" datetime="20181221-102242" hash="c94f6266789a483a43" version="2"/>
-   <elt action="install" datetime="20180702-144204" hash="194f835569a79ba433" version="3"/>
-   <elt action="install" datetime="20180101-103813" hash="c94f6266789a483a43" version="2"/>
-   <elt action="install" datetime="20171106-104603" hash="294fc86579b14b7d39" version="1"/>
-</stack_history>
-*/
+use log::{ debug, info, warn };
+use std::{
+    fs::File,
+    io::BufReader,
+    str::from_utf8,
+};
+use quick_xml::{
+    Reader,
+    events::{ attributes::Attributes, Event, },
+};
 
 #[derive(Debug)]
 struct Elt {
@@ -82,6 +111,7 @@ mod tests {
     }
 }
 
+/// Model the elt tag contents from swinstall_log
 #[derive(Debug)]
 pub struct Two;
 
