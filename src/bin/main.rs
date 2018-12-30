@@ -3,7 +3,6 @@ use env_logger;
 use failure::Error;
 use log::{debug, info, warn, error};
 use std::{
-    env,
     path::PathBuf
 };
 use structopt::StructOpt;
@@ -12,6 +11,7 @@ use swinstall_stack::{
     parser::SwinstallParser,
     schemas::two,
     traits::SwinstallCurrent,
+    utils::swinstall_stack_from_versionless,
 };
 
 
@@ -31,6 +31,53 @@ struct Opt {
     input:  PathBuf
 }
 
+// Given an Option wrapped date string, convert it to a Result wrapping NaiveDate.
+fn get_date(date: Option<String>) -> Result<NaiveDate, SwInstallError> {
+    match date {
+        Some(ref d) => {
+            // construct date
+            let pieces: Vec<&str> = d.split("-").collect();
+            if pieces.len() != 3 {
+                error!("date must be supplied using the following notation YYYY-MM-DD");
+                return Err(SwInstallError::InvalidDate(d.to_string()))?;
+            }
+           Ok(
+               NaiveDate::from_ymd(
+                   pieces[0].parse::<i32>()?,
+                   pieces[1].parse::<u32>()?,
+                   pieces[2].parse::<u32>()?
+                )
+            )
+        }
+        None => {
+           let today = Local::today();
+           Ok(NaiveDate::from_ymd(today.year(), today.month(), today.day()))
+        }
+    }
+}
+
+fn get_time(time: Option<String>) -> Result<NaiveTime, SwInstallError> {
+    match time {
+        Some(ref t) => {
+            let pieces: Vec<&str> = t.split(":").collect();
+            if pieces.len() != 3 {
+                error!("time must be supplied using the following notation: HH:MM:SS");
+                return Err(SwInstallError::InvalidTime(t.to_string()))?;
+            }
+            Ok(
+                NaiveTime::from_hms(
+                    pieces[0].parse::<u32>()?,
+                    pieces[1].parse::<u32>()?,
+                    pieces[2].parse::<u32>()?
+                )
+            )
+        }
+        None => {
+            let now = Local::now();
+            Ok(NaiveTime::from_hms(now.hour(), now.minute(), now.second()))
+        }
+    }
+}
 
 fn main() -> Result<(), Error> {
     env_logger::init();
@@ -45,41 +92,14 @@ fn main() -> Result<(), Error> {
 
     parser.set_default_schema(String::from("2"));
 
-    let date = match opt.date {
-        Some(ref d) => {
-            // construct date
-            let pieces: Vec<&str> = d.split("-").collect();
-            if pieces.len() != 3 {
-                error!("date must be supplied using the following notation YYYY-MM-DD");
-                return Err(SwInstallError::InvalidDate(d.to_string()))?;
-            }
-            NaiveDate::from_ymd(pieces[0].parse::<i32>()?, pieces[1].parse::<u32>()?, pieces[2].parse::<u32>()?)
-        }
-        None => {
-           let today = Local::today();
-           NaiveDate::from_ymd(today.year(), today.month(), today.day())
-        }
-    };
-
-    let time = match opt.time {
-        Some(ref t) => {
-            let pieces: Vec<&str> = t.split(":").collect();
-            if pieces.len() != 3 {
-                error!("time must be supplied using the following notation: HH:MM:SS");
-                return Err(SwInstallError::InvalidTime(t.to_string()))?;
-            }
-            NaiveTime::from_hms(pieces[0].parse::<u32>()?, pieces[1].parse::<u32>()?, pieces[2].parse::<u32>()?)
-        }
-        None => {
-            let now = Local::now();
-            NaiveTime::from_hms(now.hour(), now.minute(), now.second())
-        }
-    };
+    let date = get_date(opt.date)?;
+    let time = get_time(opt.time)?;
     // now create the datetime
     let datetime_at = NaiveDateTime::new(date, time);
 
     // optparse should guarantee that opt.input can be unwrapped
-    let path =  parser.current_at(opt.input.to_str().unwrap(), &datetime_at)?;
-    println!("path: {}", path);
+    let swinstall_stack = swinstall_stack_from_versionless(opt.input.to_str().unwrap())?;
+    let path =  parser.current_at(swinstall_stack.as_str(), &datetime_at)?;
+    println!("\npath: {}\n", path);
     Ok(())
 }
