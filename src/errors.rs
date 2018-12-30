@@ -28,7 +28,10 @@ pub enum SwInstallError {
     ChronoParseError(String),
     #[fail(display = "runtime error: {}", _0)]
     RuntimeError(String),
-
+    #[fail(display = "Invalid Date: {}", _0)]
+    InvalidDate(String),
+    #[fail(display = "Invalid Time: {}", _0)]
+    InvalidTime(String),
 }
 
 impl From<quick_xml::Error> for SwInstallError {

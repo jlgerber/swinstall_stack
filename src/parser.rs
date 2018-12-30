@@ -64,12 +64,16 @@ impl SwinstallParser {
         }
     }
 
-    /// Register a struct implementing SwinstallCurrent with registry
+    /// Register a struct implementing SwinstallCurrent with the schema registry,
+    /// which affords for handling different generations of an swinstall_stack
+    /// from the same code.
     pub fn register(&mut self, value: Box<dyn SwinstallCurrent<SwBufReader = BufReader<File>>>) {
         self.registry.insert(value.schema(), value);
     }
 
-    /// Set the default schema.
+    /// Set the default schema. This is the schema associated with the
+    /// SwinstallCurrent implementation which will run by default,
+    /// when the outer swinstall tag has no version attribute.
     pub fn set_default_schema(&mut self, schema: String) -> bool  {
 
         if !self.registry.contains_key(&schema.as_str()) {
@@ -80,6 +84,7 @@ impl SwinstallParser {
         true
     }
 
+    /// Retrieve the SwinstallComponent registered against a paritcular schema.
     pub fn get(&self, schema: &str) -> Option<&Box<dyn SwinstallCurrent<SwBufReader = BufReader<File>>>> {
         self.registry.get(schema)
     }
@@ -139,11 +144,14 @@ impl SwinstallParser {
         Ok(path)
     }
 
+    /// Retrieve the path to the file marked current in the supplied swinstall_stack.
     pub fn current(&self, swinstall_stack: &str) -> Result<String, failure::Error> {
         let dt = Local::now().naive_local();
         self.current_at(swinstall_stack, &dt)
     }
 
+    /// Retrieve the path to the file marked current as close to but not later
+    /// than the supplied datetime.
     pub fn current_at(&self, swinstall_stack: &str, datetime: &NaiveDateTime) -> Result<String, failure::Error> {
         let mut reader = Reader::from_file(Path::new(swinstall_stack))?;
         let mut buf = Vec::new();
