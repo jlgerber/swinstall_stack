@@ -1,0 +1,7 @@
+<packages>
+    <package name="coolthing" version="1" />
+    <package name="other" version="1" />
+    <package name="thirdthing" version="1" />
+    <package name="squanchy" version="1" />
+    <package name="birdman" version="1" />
+</packages>
