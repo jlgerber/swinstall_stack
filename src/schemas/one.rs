@@ -71,7 +71,7 @@ use quick_xml::{
 };
 
 /// Model the elt tag contents from swinstall_log
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 pub struct Elt {
     pub is_current: bool,
     pub version: String,
@@ -133,9 +133,49 @@ impl Elt {
 #[cfg(test)]
 mod tests {
     use super::*;
+
     #[test]
     fn elt_from_attrs() {
+       let str_from = r#"<elt is_current="True" version="20161213-093146"/>"#;
+       let mut reader = Reader::from_str(str_from);
+       let mut buf = Vec::new();
+       loop {
+            match reader.read_event(&mut buf) {
+                        Ok(Event::Empty(ref e)) => {
+                            let elt = Elt::from_attrs(e.attributes()).expect("could not create elt");
+                            let expected = Elt {
+                                is_current: true,
+                                version: "20161213-093146".to_string(),
+                                revision: None
+                            };
+                            assert_eq!(elt, expected);
+                            break;
+                        }
+                        _ => {}
+            }
+        }
+    }
 
+    #[test]
+    fn elt_from_attrs_with_revision() {
+       let str_from = r#"<elt is_current="True" version="20161213-093146_r575055"/>"#;
+       let mut reader = Reader::from_str(str_from);
+       let mut buf = Vec::new();
+       loop {
+            match reader.read_event(&mut buf) {
+                        Ok(Event::Empty(ref e)) => {
+                            let elt = Elt::from_attrs(e.attributes()).expect("could not create elt");
+                            let expected = Elt {
+                                is_current: true,
+                                version: "20161213-093146".to_string(),
+                                revision: Some("r575055".to_string())
+                            };
+                            assert_eq!(elt, expected);
+                            break;
+                        }
+                        _ => {}
+            }
+        }
     }
 }
 

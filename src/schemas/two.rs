@@ -53,7 +53,7 @@ use quick_xml::{
     events::{ attributes::Attributes, Event, },
 };
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq)]
 struct Elt {
     pub action: String,
     pub datetime: String,
@@ -106,8 +106,27 @@ impl Elt {
 mod tests {
     use super::*;
     #[test]
-    fn elt_from_attrs() {
+        fn elt_from_attrs() {
+       let str_from = r#"<elt action="install" datetime="20180702-144204" hash="194f835569a79ba433" version="3"/>"#;
+       let mut reader = Reader::from_str(str_from);
+       let mut buf = Vec::new();
+       loop {
+            match reader.read_event(&mut buf) {
+                        Ok(Event::Empty(ref e)) => {
+                            let elt = Elt::from_attrs(e.attributes()).expect("could not create elt");
+                            let expected = Elt {
+                                action: String::from("install"),
+                                datetime: "20180702-144204".to_string(),
+                                hash: String::from("194f835569a79ba433"),
+                                version: "3".to_string(),
+                            };
 
+                            assert_eq!(elt, expected);
+                            break;
+                        }
+                        _ => {}
+            }
+        }
     }
 }
 
