@@ -207,15 +207,16 @@ impl PartialEq for One {
 }
 
 impl SwinstallCurrent for One {
-    type SwBufReader = BufReader<File>;
     type SwElem = schemas::ReturnElt;
 
     fn schema(&self) -> &'static str {
             "1"
     }
 
-    fn current_at(&self, reader: &mut Reader<Self::SwBufReader>, datetime: &NaiveDateTime)
+    fn current_at<T>(&self, reader: &mut Reader<T>, datetime: &NaiveDateTime)
         -> Result<Self::SwElem, SwInstallError>
+    where
+        T: std::io::BufRead
     {
         debug!("one::One.current_at called");
         let mut buf = Vec::new();

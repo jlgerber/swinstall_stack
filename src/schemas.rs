@@ -52,7 +52,6 @@ pub enum SchemaWrapper {
 
 
 impl SwinstallCurrent for SchemaWrapper {
-    type SwBufReader = BufReader<File>;
     type SwElem = ReturnElt;
 
     fn schema(&self) -> &'static str {
@@ -62,10 +61,10 @@ impl SwinstallCurrent for SchemaWrapper {
         }
     }
 
-    fn current_at(&self, reader: &mut Reader<Self::SwBufReader>, datetime: &NaiveDateTime)
+    fn current_at<T>(&self, reader: &mut Reader<T>, datetime: &NaiveDateTime)
         -> Result<Self::SwElem, SwInstallError>
     where
-        <Self as SwinstallCurrent>::SwBufReader: std::io::BufRead
+        T: std::io::BufRead
     {
         match *self {
             SchemaWrapper::One(ref one) => one.current_at(reader, datetime),
