@@ -59,8 +59,8 @@ use crate::constants::DATETIME_FMT;
 use crate::errors::SwInstallError;
 use crate::traits::{ SwinstallCurrent, SwInstallElement };
 use crate::schemas;
-
 use std::{
+    cmp::PartialEq,
     fs::File,
     io::BufReader,
     str::{ FromStr, from_utf8, }
@@ -191,12 +191,18 @@ mod tests {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, Eq)]
 pub struct One;
 
 impl One {
     pub fn new() -> Self {
         One {}
+    }
+}
+
+impl PartialEq for One {
+    fn eq(&self, other: &One) -> bool {
+        self.schema() == other.schema()
     }
 }
 

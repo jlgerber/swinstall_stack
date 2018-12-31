@@ -44,6 +44,7 @@ use crate::{
 #[allow(unused_imports)]
 use log::{ debug, info, warn };
 use std::{
+    cmp::PartialEq,
     fs::File,
     io::BufReader,
     str::from_utf8,
@@ -139,12 +140,18 @@ mod tests {
 }
 
 /// Model the elt tag contents from swinstall_log
-#[derive(Debug)]
+#[derive(Debug, Eq)]
 pub struct Two;
 
 impl Two {
     pub fn new() -> Self {
         Two {}
+    }
+}
+
+impl PartialEq for Two {
+    fn eq(&self, other: &Two) -> bool {
+        self.schema() == other.schema()
     }
 }
 
