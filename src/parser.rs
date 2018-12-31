@@ -164,7 +164,6 @@ impl SwinstallParser {
             buf.clear();
         }
     }
-
 }
 
 
@@ -205,11 +204,11 @@ r#"<?xml version="1.0" encoding="UTF-8"?>
     //use std::fs::File;
 
     fn setup_parser() -> SwinstallParser {
-        let mycur = One {};
-        let mycur2 = Two {};
+        let my_one = One {};
+        let my_two = Two {};
         let mut parser = SwinstallParser::new();
-        parser.register(SchemaWrapper::One(mycur));
-        parser.register(SchemaWrapper::Two(mycur2));
+        parser.register(SchemaWrapper::One(my_one));
+        parser.register(SchemaWrapper::Two(my_two));
         parser.set_default_schema(String::from("1"));
         parser
     }
@@ -239,12 +238,11 @@ r#"<?xml version="1.0" encoding="UTF-8"?>
     #[test]
     fn get_parser_current_schema1() {
         let parser = setup_parser();
-        let result = parser.current(Box::new(|swinstall: &str| {
+        let result = parser.current(Box::new(|_swinstall: &str| {
           Ok(quick_xml::Reader::from_str(SCHEMA1_XML))
         }), "/dd/facility/etc/bak/packages.xml/packages.xml_swinstall_stack").unwrap();
         assert_eq!(result.as_str(), "/dd/facility/etc/bak/packages.xml/packages.xml_20180613-093146_r575055");
     }
-
 
     #[test]
     fn get_parser_current_at_schema1_pre() {
@@ -252,7 +250,7 @@ r#"<?xml version="1.0" encoding="UTF-8"?>
         let t = NaiveTime::from_hms(19, 30, 0);
         let d = NaiveDate::from_ymd(2017, 12, 22);
         let datetime = NaiveDateTime::new(d,t);
-        let result = parser.current_at(Box::new(|swinstall: &str| {
+        let result = parser.current_at(Box::new(|_swinstall: &str| {
           Ok(quick_xml::Reader::from_str(SCHEMA1_XML))
         }), "/dd/facility/etc/bak/packages.xml/packages.xml_swinstall_stack", &datetime).unwrap();
         assert_eq!(result.as_str(), "/dd/facility/etc/bak/packages.xml/packages.xml_20171202-090333");
@@ -265,7 +263,7 @@ r#"<?xml version="1.0" encoding="UTF-8"?>
         let t = NaiveTime::from_hms(20, 30, 0);
         let d = NaiveDate::from_ymd(2018, 12, 30);
         let datetime = NaiveDateTime::new(d,t);
-        let result = parser.current_at(Box::new(|swinstall: &str| {
+        let result = parser.current_at(Box::new(|_swinstall: &str| {
           Ok(quick_xml::Reader::from_str(SCHEMA1_XML))
         }), "/dd/facility/etc/bak/packages.xml/packages.xml_swinstall_stack", &datetime).unwrap();
         assert_eq!(result.as_str(), "/dd/facility/etc/bak/packages.xml/packages.xml_20180613-093146_r575055");
@@ -274,7 +272,7 @@ r#"<?xml version="1.0" encoding="UTF-8"?>
     #[test]
     fn get_parser_current_schema2() {
         let parser = setup_parser();
-        let result = parser.current(Box::new(|swinstall: &str| {
+        let result = parser.current(Box::new(|_swinstall: &str| {
           Ok(quick_xml::Reader::from_str(SCHEMA2_XML))
         }), "/dd/facility/etc/bak/packages.xml/packages.xml_swinstall_stack").unwrap();
         assert_eq!(result.as_str(), "/dd/facility/etc/bak/packages.xml/packages.xml_5");
@@ -287,7 +285,7 @@ r#"<?xml version="1.0" encoding="UTF-8"?>
         let t = NaiveTime::from_hms(20, 30, 0);
         let d = NaiveDate::from_ymd(2018, 2, 1);
         let datetime = NaiveDateTime::new(d,t);
-        let result = parser.current_at(Box::new(|swinstall: &str| {
+        let result = parser.current_at(Box::new(|_swinstall: &str| {
           Ok(quick_xml::Reader::from_str(SCHEMA2_XML))
         }), "/dd/facility/etc/bak/packages.xml/packages.xml_swinstall_stack", &datetime).unwrap();
         assert_eq!(result.as_str(), "/dd/facility/etc/bak/packages.xml/packages.xml_2");
