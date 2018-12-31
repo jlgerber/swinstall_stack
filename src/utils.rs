@@ -77,6 +77,17 @@ pub fn versioned_from_swinstall_stack(filepath: &str, version: &str) -> Result<S
     Ok(result)
 }
 
+/// Generate the default closure for reading an xml file
+pub fn reader_from_file_fn() -> Box<Fn(&str)
+    -> Result<quick_xml::Reader<std::io::BufReader<std::fs::File>>, SwInstallError>>
+
+{
+    Box::new(
+        |swinstall_stack: &str| {
+            Ok(quick_xml::Reader::from_file(std::path::Path::new(swinstall_stack))?)
+        }
+    )
+}
 
 #[cfg(test)]
 mod tests {
