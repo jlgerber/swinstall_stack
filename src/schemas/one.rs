@@ -61,8 +61,8 @@ use crate::traits::{ SwinstallCurrent, SwInstallElement };
 use crate::schemas;
 use std::{
     cmp::PartialEq,
-    fs::File,
-    io::BufReader,
+   // fs::File,
+   // io::BufReader,
     str::{ FromStr, from_utf8, }
 };
 #[allow(unused_imports)]
@@ -223,6 +223,10 @@ impl SwinstallCurrent for One {
         let mut current=false;
         let mut in_datetime = false;
         let mut last_elt = None;
+        // for some reason, this complains that in_empty is never read
+        // even though it is used in the inner scope and must be in
+        // this outer scope for lifetime reasons.
+        #[allow(unused_assignments)]
         let mut in_empty = false;
         loop {
             match reader.read_event(&mut buf) {
@@ -280,7 +284,7 @@ impl SwinstallCurrent for One {
                 }
             }
         }
-        Err(SwInstallError::NoCurrentFound)?
+        // Err(SwInstallError::NoCurrentFound)?
     }
 
 }

@@ -45,8 +45,8 @@ use crate::{
 use log::{ debug, info, warn };
 use std::{
     cmp::PartialEq,
-    fs::File,
-    io::BufReader,
+    //fs::File,
+    //io::BufReader,
     str::from_utf8,
 };
 use quick_xml::{
