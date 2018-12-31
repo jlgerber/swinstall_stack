@@ -1,12 +1,22 @@
 pub mod one;
 pub mod two;
 use crate::traits::{
+    SwinstallCurrent,
     SwInstallElementWrapper,
-    SwInstallElement
+    SwInstallElement,
 };
+use chrono::NaiveDateTime;
 use crate::errors::SwInstallError;
-use quick_xml::events::attributes::Attributes;
-
+use std::{
+    cmp::PartialEq,
+    fs::File,
+    io::BufReader,
+    str::from_utf8,
+};
+use quick_xml::{
+    Reader,
+    events::{ attributes::Attributes, Event, },
+};
 /// Work around for Object Safety issues with associated types.
 /// I introduced this enum to allow us to return a full structure
 /// as opposed to a string.
@@ -34,3 +44,32 @@ impl SwInstallElementWrapper for ReturnElt {
     }
 }
 
+#[derive(Debug, PartialEq, Eq)]
+pub enum SchemaWrapper {
+    One(one::One),
+    Two(two::Two),
+}
+
+
+impl SwinstallCurrent for SchemaWrapper {
+    type SwBufReader = BufReader<File>;
+    type SwElem = ReturnElt;
+
+    fn schema(&self) -> &'static str {
+        match *self {
+            SchemaWrapper::One(ref one) => one.schema(),
+            SchemaWrapper::Two(ref two) => two.schema(),
+        }
+    }
+
+    fn current_at(&self, reader: &mut Reader<Self::SwBufReader>, datetime: &NaiveDateTime)
+        -> Result<Self::SwElem, SwInstallError>
+    where
+        <Self as SwinstallCurrent>::SwBufReader: std::io::BufRead
+    {
+        match *self {
+            SchemaWrapper::One(ref one) => one.current_at(reader, datetime),
+            SchemaWrapper::Two(ref two) => two.current_at(reader, datetime),
+        }
+    }
+}
