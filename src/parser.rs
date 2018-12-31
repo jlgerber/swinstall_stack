@@ -42,10 +42,9 @@ impl SwinstallParser {
         }
     }
 
-    /// Register a struct implementing SwinstallCurrent with the schema registry,
-    /// which affords for handling different generations of an swinstall_stack
-    /// from the same code.
-   // pub fn register(&mut self, value: Box<dyn SwinstallCurrent<SwBufReader = BufReader<File>, SwElem = ReturnElt>>)
+    /// Register a SchemaWrapper enum tagging an implementation of SwinstallCurrent
+    /// with the schema registry, which affords for handling different generations
+    /// of an swinstall_stack from the same code.
     pub fn register(&mut self, value: SchemaWrapper) {
         self.registry.insert(value.schema(), value);
     }
