@@ -23,6 +23,7 @@ use quick_xml::{
 //type SwReader = Reader<BufReader<File>>;
 type SwinstallCurrentRegistry = HashMap<&'static str, SchemaWrapper > ;
 
+
 #[derive(Debug)]
 pub struct SwinstallParser {
     // Registry hashmap storing different implementations of elt parser based on
@@ -101,15 +102,24 @@ impl SwinstallParser {
     }
 
     /// Retrieve the path to the file marked current in the supplied swinstall_stack.
-    pub fn current(&self, swinstall_stack: &str) -> Result<String, failure::Error> {
+    pub fn current<T>(&self, readfn: Box<Fn(&str) -> Result<Reader<T>,SwInstallError>>, swinstall_stack: &str)
+        -> Result<String, failure::Error>
+    where
+        T: std::io::BufRead
+    {
         let dt = Local::now().naive_local();
-        self.current_at(swinstall_stack, &dt)
+        self.current_at(readfn, swinstall_stack, &dt)
     }
 
     /// Retrieve the path to the file marked current as close to but not later
     /// than the supplied datetime.
-    pub fn current_at(&self, swinstall_stack: &str, datetime: &NaiveDateTime) -> Result<String, failure::Error> {
-        let mut reader = Reader::from_file(Path::new(swinstall_stack))?;
+    pub fn current_at<T>(&self,readfn: Box<Fn(&str) -> Result<Reader<T>,SwInstallError>>, swinstall_stack: &str, datetime: &NaiveDateTime)
+    -> Result<String, failure::Error>
+    where
+        T: std::io::BufRead
+    {
+        //let mut reader = Reader::from_file(Path::new(swinstall_stack))?;
+        let mut reader = readfn(swinstall_stack)?;
         let mut buf = Vec::new();
 
         loop {
