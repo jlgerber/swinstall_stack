@@ -4,8 +4,8 @@
 use chrono::{ NaiveDateTime, Local };
 use crate::{
     SwInstallError,
-    schemas::ReturnElt,
-    traits::{ SwinstallCurrent, SwInstallElement, SwInstallElementWrapper, },
+    schemas::{ReturnElt, SchemaWrapper },
+    traits::{ SwinstallCurrent,  SwInstallElementWrapper, },
     utils::versioned_from_swinstall_stack,
 };
 use log::{debug};
@@ -13,7 +13,7 @@ use std::{
     collections::HashMap,
     io::BufReader,
     fs::File,
-    path::{Path, PathBuf},
+    path::{Path,},
 };
 use quick_xml::{
     events::{ BytesStart, Event },
@@ -21,7 +21,7 @@ use quick_xml::{
 };
 
 type SwReader = Reader<BufReader<File>>;
-type SwinstallCurrentRegistry = HashMap<&'static str, Box<dyn SwinstallCurrent<SwBufReader = BufReader<File>, SwElem=ReturnElt>> > ;
+type SwinstallCurrentRegistry = HashMap<&'static str, SchemaWrapper > ;
 
 #[derive(Debug)]
 pub struct SwinstallParser {
@@ -45,8 +45,8 @@ impl SwinstallParser {
     /// Register a struct implementing SwinstallCurrent with the schema registry,
     /// which affords for handling different generations of an swinstall_stack
     /// from the same code.
-    pub fn register(&mut self, value: Box<dyn SwinstallCurrent<SwBufReader = BufReader<File>, SwElem = ReturnElt>>)
-    {
+   // pub fn register(&mut self, value: Box<dyn SwinstallCurrent<SwBufReader = BufReader<File>, SwElem = ReturnElt>>)
+    pub fn register(&mut self, value: SchemaWrapper) {
         self.registry.insert(value.schema(), value);
     }
 
@@ -65,7 +65,7 @@ impl SwinstallParser {
 
     /// Retrieve the SwinstallComponent registered against a paritcular schema.
     pub fn get_component(&self, schema: &str)
-    -> Option<&Box<dyn SwinstallCurrent<SwBufReader = BufReader<File>, SwElem = ReturnElt >>>
+    -> Option<&SchemaWrapper>
     {
         self.registry.get(schema)
     }
@@ -141,94 +141,94 @@ impl SwinstallParser {
 }
 
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+// #[cfg(test)]
+// mod tests {
+//     use super::*;
 
-    use crate::schemas::one::One;
+//     use crate::schemas::one::One;
 
-    use chrono::{NaiveDateTime};
-    use quick_xml::Reader;
-    use std::io::BufReader;
-    use std::fs::File;
+//     use chrono::{NaiveDateTime};
+//     use quick_xml::Reader;
+//     use std::io::BufReader;
+//     use std::fs::File;
 
-    #[derive(Debug)]
-    struct MyCurrent;
+//     #[derive(Debug)]
+//     struct MyCurrent;
 
-    impl SwinstallCurrent for MyCurrent {
-        type SwBufReader = BufReader<File>;
-        type SwElem = ReturnElt;
-        //const SCHEMA: &'static str = "1";
-        fn schema(&self) -> &'static str {
-            "1"
-        }
+//     impl SwinstallCurrent for MyCurrent {
+//         type SwBufReader = BufReader<File>;
+//         type SwElem = ReturnElt;
+//         //const SCHEMA: &'static str = "1";
+//         fn schema(&self) -> &'static str {
+//             "1"
+//         }
 
-        fn current(&self, reader: &mut Reader<Self::SwBufReader>) -> Result<ReturnElt, SwInstallError> {
-             Err(SwInstallError::RuntimeError("/foo/bar/bla.yaml_20181123-090200".to_string()))
-        }
-
-
-        fn current_at(&self, reader: &mut Reader<Self::SwBufReader>, datetime: &NaiveDateTime)
-            -> Result<ReturnElt, SwInstallError>
-        {
-            Err(SwInstallError::RuntimeError("/foo/bar/bla.yaml_20181124-212211".to_string()))
-        }
-    }
+//         fn current(&self, reader: &mut Reader<Self::SwBufReader>) -> Result<ReturnElt, SwInstallError> {
+//              Err(SwInstallError::RuntimeError("/foo/bar/bla.yaml_20181123-090200".to_string()))
+//         }
 
 
-    #[derive(Debug)]
-    struct MyCurrent2;
-
-    impl SwinstallCurrent for MyCurrent2 {
-        type SwBufReader = BufReader<File>;
-        type SwElem = ReturnElt;
-
-        //const SCHEMA: &'static str = "2";
-        fn schema(&self) -> &'static str {
-            "2"
-        }
-
-        fn current(&self, reader: &mut Reader<Self::SwBufReader>) -> Result<ReturnElt, SwInstallError> {
-             Err(SwInstallError::RuntimeError("/foo/bar/bla.yaml_20181123-090200".to_string()))
-        }
+//         fn current_at(&self, reader: &mut Reader<Self::SwBufReader>, datetime: &NaiveDateTime)
+//             -> Result<ReturnElt, SwInstallError>
+//         {
+//             Err(SwInstallError::RuntimeError("/foo/bar/bla.yaml_20181124-212211".to_string()))
+//         }
+//     }
 
 
-        fn current_at(&self, reader: &mut Reader<Self::SwBufReader>, datetime: &NaiveDateTime)
-            -> Result<ReturnElt, SwInstallError>
-        {
-            Err(SwInstallError::RuntimeError("/foo/bar/bla.yaml_20181124-212211".to_string()))
-        }
-    }
+//     #[derive(Debug)]
+//     struct MyCurrent2;
 
-    #[test]
-    fn register_schema() {
-        let mycur = One {};
-        let mycur2 = MyCurrent2 {};
-        let mut parser = SwinstallParser::new();
-        parser.register(Box::new(mycur));
-        parser.register(Box::new(mycur2));
-        parser.set_default_schema(String::from("2"));
-        assert_eq!(parser.registry.len(), 2);
-    }
+//     impl SwinstallCurrent for MyCurrent2 {
+//         type SwBufReader = BufReader<File>;
+//         type SwElem = ReturnElt;
 
-    #[test]
-    fn get_swinstall_parser() {
-        let mycur = MyCurrent {};
-        let mycur2 = MyCurrent2 {};
-        let mut parser = SwinstallParser::new();
-        parser.register(Box::new(mycur));
-        parser.register(Box::new(mycur2));
+//         //const SCHEMA: &'static str = "2";
+//         fn schema(&self) -> &'static str {
+//             "2"
+//         }
 
-        if let Some(result) = parser.get_component("2") {
-            assert_eq!(result.schema(), "2");
-        } else {
-            panic!("unable to get schema 2");
-        };
+//         fn current(&self, reader: &mut Reader<Self::SwBufReader>) -> Result<ReturnElt, SwInstallError> {
+//              Err(SwInstallError::RuntimeError("/foo/bar/bla.yaml_20181123-090200".to_string()))
+//         }
 
-        if let Some(result) = parser.get_component("1") {
-            assert_eq!(result.schema(), "1");
-        } else {
-            panic!("unable to get schema 1");
-        };
-    }
-}
+
+//         fn current_at(&self, reader: &mut Reader<Self::SwBufReader>, datetime: &NaiveDateTime)
+//             -> Result<ReturnElt, SwInstallError>
+//         {
+//             Err(SwInstallError::RuntimeError("/foo/bar/bla.yaml_20181124-212211".to_string()))
+//         }
+//     }
+
+//     #[test]
+//     fn register_schema() {
+//         let mycur = One {};
+//         let mycur2 = MyCurrent2 {};
+//         let mut parser = SwinstallParser::new();
+//         parser.register(Box::new(mycur));
+//         parser.register(Box::new(mycur2));
+//         parser.set_default_schema(String::from("2"));
+//         assert_eq!(parser.registry.len(), 2);
+//     }
+
+//     #[test]
+//     fn get_swinstall_parser() {
+//         let mycur = MyCurrent {};
+//         let mycur2 = MyCurrent2 {};
+//         let mut parser = SwinstallParser::new();
+//         parser.register(Box::new(mycur));
+//         parser.register(Box::new(mycur2));
+
+//         if let Some(result) = parser.get_component("2") {
+//             assert_eq!(result.schema(), "2");
+//         } else {
+//             panic!("unable to get schema 2");
+//         };
+
+//         if let Some(result) = parser.get_component("1") {
+//             assert_eq!(result.schema(), "1");
+//         } else {
+//             panic!("unable to get schema 1");
+//         };
+//     }
+// }
