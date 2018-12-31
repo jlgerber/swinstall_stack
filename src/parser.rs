@@ -11,8 +11,8 @@ use crate::{
 use log::{debug};
 use std::{
     collections::HashMap,
-    io::BufReader,
-    fs::File,
+    //io::BufReader,
+    //fs::File,
     path::{Path,},
 };
 use quick_xml::{
@@ -20,7 +20,7 @@ use quick_xml::{
     Reader,
 };
 
-type SwReader = Reader<BufReader<File>>;
+//type SwReader = Reader<BufReader<File>>;
 type SwinstallCurrentRegistry = HashMap<&'static str, SchemaWrapper > ;
 
 #[derive(Debug)]
@@ -86,7 +86,11 @@ impl SwinstallParser {
     }
 
     // Get the current version as a String
-    fn current_version<'a>(&self, reader: &mut SwReader, schema: &str, datetime: &NaiveDateTime) -> Result<ReturnElt, failure::Error> {
+    fn current_version<'a, T>(&self, reader: &mut Reader<T>, schema: &str, datetime: &NaiveDateTime)
+        -> Result<ReturnElt, failure::Error>
+    where
+        T: std::io::BufRead
+    {
 
         let elt_reader = self.get_component(schema).ok_or(SwInstallError::RuntimeError(format!("Unable to get reader for schema: {}", schema)))?;
         debug!("calling elt_reader.current_at(reader, {})", datetime);
