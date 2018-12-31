@@ -50,7 +50,7 @@ pub trait SwInstallElement: Debug + PartialEq + Eq + Sized {
     fn version(&self) -> String;
 }
 
-pub trait SwinstallCurrent: std::fmt::Debug  {
+pub trait SwinstallCurrent: std::fmt::Debug + std::cmp::PartialEq + Eq {
     type SwBufReader;
     type SwElem: SwInstallElementWrapper;
 
