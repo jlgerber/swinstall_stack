@@ -11,7 +11,7 @@ use swinstall_stack::{
     constants::{DEFAULT_LOG_LEVEL, VERBOSE_LOG_LEVEL},
     errors::SwInstallError,
     parser::SwinstallParser,
-    schemas::{ one, two },
+    schemas::{ one, two, SchemaWrapper },
     utils::swinstall_stack_from_versionless,
 };
 
@@ -91,11 +91,11 @@ fn main() -> Result<(), Error> {
     let mut parser = SwinstallParser::new();
 
     // create schemas and register them with the parser
-    let schema1 = one::One::new();
-    let schema2 = two::Two::new();
+    let schema1 = SchemaWrapper::One(one::One::new());
+    let schema2 = SchemaWrapper::Two(two::Two::new());
 
-    parser.register(Box::new(schema1));
-    parser.register(Box::new(schema2));
+    parser.register(schema1);
+    parser.register(schema2);
 
     // set a default schema to be used in the event that the swinstall_stack
     // does not
