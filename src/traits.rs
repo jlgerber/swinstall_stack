@@ -4,16 +4,16 @@
 //!
 //! Define traits used in the project. Currently, there is one: `SwinstallCurrent`.
 //!
-//! ```SwinstallCurrent``` defines the interface for introspecting swinstall_stack xml
+//! `SwinstallCurrent` defines the interface for introspecting swinstall_stack xml
 //! files; speficically, for looping over a number of elt tags, parsing them via
 //! quick-xml, and identifying the contents.
 //!
 //! There are three major responsibilities of this trait:
 //!
-//!     - identifying the schema version of the swinstall_stack xml file
-//!     - retrieving the current swinstalled file tracked in the swinstall_stack
-//!     - retrieving the file swinstalled on the date and time closest to but not
-//!       exceeding that provided by the user
+//! - identifying the schema version of the swinstall_stack xml file
+//! - retrieving the current swinstalled file tracked in the swinstall_stack
+//! - retrieving the file swinstalled on the date and time closest to but not
+//!   exceeding that provided by the user
 //!
 //! Because swinstall_stack maintains a registry of SwinstallCurrent trait objects,
 //! allowing us to parse multiple different schema versions from the same runtime,
@@ -29,20 +29,30 @@
 //! Another approach might have been to define the different schema structs as an enum,
 //! but I didn't want to pattern match against each enum branch for each elt tag,
 //! as the each xml file should have a uniform elt tag structure based on its schema.
+
 use chrono::{NaiveDateTime, Local};
 use crate::errors::SwInstallError;
 use quick_xml::Reader;
 use std::fmt::Debug;
 use quick_xml::events::attributes::Attributes;
 
-pub trait SwInstallElement: Debug + PartialEq + Eq + Sized {
+/// This trait targets the enum which wraps each of the schema return Elements and is
+/// used to help circumvent issues with Object Safety.
+pub trait SwInstallElementWrapper: Debug + PartialEq + Eq + Sized {
     fn from_attrs<'a>(version: &str, attrs: Attributes<'a>) -> Result<Self, SwInstallError>;
+    fn version(&self) -> String;
+}
+
+/// This trait defines common interface for the Elt element which represents
+/// an entry in the swinstall_stack for a specific schema.
+pub trait SwInstallElement: Debug + PartialEq + Eq + Sized {
+    fn from_attrs<'a>(attrs: Attributes<'a>) -> Result<Self, SwInstallError>;
     fn version(&self) -> String;
 }
 
 pub trait SwinstallCurrent: std::fmt::Debug  {
     type SwBufReader;
-    type SwElem: SwInstallElement;
+    type SwElem: SwInstallElementWrapper;
 
     // this sucks. associated const are not object safe so....
     //const SCHEMA: &'static str;
