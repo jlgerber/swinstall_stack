@@ -185,7 +185,20 @@ r#"<stack_history path="/dd/facility/etc/bak/packages.xml/packages.xml_swinstall
    <elt is_current="True" version="20161213-093146_r575055"/>
    <elt is_current="False" version="20181220-091955"/>
    <elt is_current="False" version="20181220-092031"/>
-</stack_history"#;
+</stack_history>"#;
+
+const SCHEMA2_XML: &'static str =
+r#"<?xml version="1.0" encoding="UTF-8"?>
+<stack_history path="/Users/jonathangerber/src/rust/swinstall_stack/examples/schema2/bak/packages.xml/packages.xml_swinstall_stack" schema="2">
+   <elt action="install" datetime="20181221-142313" hash="c618755af9b63728411bc536d2c60cf2" version="5"/>
+   <elt action="install" datetime="20181221-142248" hash="5c8fdabe2ae7fa9287c0672b88ef6593" version="4"/>
+   <elt action="rollback" datetime="20181221-102242" hash="294fc86579b14b7d39" version="1"/>
+   <elt action="rollback" datetime="20181221-102344" hash="c94f6266789a483a43" version="2"/>
+   <elt action="install" datetime="20180702-144204" hash="194f835569a79ba433" version="3"/>
+   <elt action="install" datetime="20180101-103813" hash="c94f6266789a483a43" version="2"/>
+   <elt action="install" datetime="20171106-104603" hash="294fc86579b14b7d39" version="1"/>
+</stack_history>"#;
+
     //use chrono::{NaiveDateTime};
     //use quick_xml::Reader;
     //use std::io::BufReader;
@@ -224,11 +237,21 @@ r#"<stack_history path="/dd/facility/etc/bak/packages.xml/packages.xml_swinstall
     }
 
     #[test]
-    fn get_swinstall_parser_version() {
+    fn get_parser_current_schema1() {
         let parser = setup_parser();
         let result = parser.current(Box::new(|swinstall: &str| {
           Ok(quick_xml::Reader::from_str(SCHEMA1_XML))
         }), "/dd/facility/etc/bak/packages.xml/packages.xml_swinstall_stack").unwrap();
-        assert_eq!(result.as_str(), "/dd/facility/etc/bak/packages.xml/packages.xml_20161213-093146_r575055")
+        assert_eq!(result.as_str(), "/dd/facility/etc/bak/packages.xml/packages.xml_20161213-093146_r575055");
+    }
+
+
+    #[test]
+    fn get_parser_current_schema2() {
+        let parser = setup_parser();
+        let result = parser.current(Box::new(|swinstall: &str| {
+          Ok(quick_xml::Reader::from_str(SCHEMA2_XML))
+        }), "/dd/facility/etc/bak/packages.xml/packages.xml_swinstall_stack").unwrap();
+        assert_eq!(result.as_str(), "/dd/facility/etc/bak/packages.xml/packages.xml_5");
     }
 }
