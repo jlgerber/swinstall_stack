@@ -1,6 +1,9 @@
 pub mod one;
 pub mod two;
-use crate::traits::SwInstallElement;
+use crate::traits::{
+    SwInstallElementWrapper,
+    SwInstallElement
+};
 use crate::errors::SwInstallError;
 use quick_xml::events::attributes::Attributes;
 
@@ -13,12 +16,12 @@ pub enum ReturnElt {
     Two(two::Elt),
 }
 
-impl SwInstallElement for ReturnElt {
+impl SwInstallElementWrapper for ReturnElt {
 
     fn from_attrs<'a>(version: &str, attrs: Attributes<'a>) -> Result<Self, SwInstallError> {
         match version {
-            "1" => Ok(ReturnElt::One(one::Elt::from_attrs("1", attrs)?)),
-            "2" => Ok(ReturnElt::Two(two::Elt::from_attrs("2", attrs)?)),
+            "1" => Ok(ReturnElt::One(one::Elt::from_attrs( attrs)?)),
+            "2" => Ok(ReturnElt::Two(two::Elt::from_attrs(attrs)?)),
             _ => Err(SwInstallError::RuntimeError(String::from("unable to instantiate Elt")))
         }
     }

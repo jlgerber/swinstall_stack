@@ -72,7 +72,7 @@ impl Elt {
 
 impl SwInstallElement for Elt {
 
-    fn from_attrs<'a>(_version: &str, attrs: Attributes<'a>) -> Result<Elt, SwInstallError> {
+    fn from_attrs<'a>(attrs: Attributes<'a>) -> Result<Elt, SwInstallError> {
         let mut action = None;
         let mut datetime = None;
         let mut hash = None;
@@ -121,7 +121,7 @@ mod tests {
        loop {
             match reader.read_event(&mut buf) {
                         Ok(Event::Empty(ref e)) => {
-                            let elt = Elt::from_attrs("", e.attributes()).expect("could not create elt");
+                            let elt = Elt::from_attrs( e.attributes()).expect("could not create elt");
                             let expected = Elt {
                                 action: String::from("install"),
                                 datetime: "20180702-144204".to_string(),
@@ -165,7 +165,7 @@ impl SwinstallCurrent for Two {
                 Ok(Event::Empty(ref e)) => {
                     if e.name() == b"elt" {
                         debug!("Event::Empty - elt tag matched");
-                        let elt = Elt::from_attrs("",e.attributes())?;
+                        let elt = Elt::from_attrs(e.attributes())?;
                         let dt = NaiveDateTime::parse_from_str(elt.datetime.as_str(), DATETIME_FMT)?;
                         if dt <= *datetime {
 

@@ -5,8 +5,8 @@ use chrono::{ NaiveDateTime, Local };
 use crate::{
     SwInstallError,
     schemas::ReturnElt,
-    traits::{ SwinstallCurrent, SwInstallElement, },
-    utils::versioned_from_swinstall_stack
+    traits::{ SwinstallCurrent, SwInstallElement, SwInstallElementWrapper, },
+    utils::versioned_from_swinstall_stack,
 };
 use log::{debug};
 use std::{
@@ -163,15 +163,15 @@ mod tests {
             "1"
         }
 
-        fn current(&self, reader: &mut Reader<Self::SwBufReader>) -> Result<String, SwInstallError> {
-             Ok("/foo/bar/bla.yaml_20181123-090200".to_string())
+        fn current(&self, reader: &mut Reader<Self::SwBufReader>) -> Result<ReturnElt, SwInstallError> {
+             Err(SwInstallError::RuntimeError("/foo/bar/bla.yaml_20181123-090200".to_string()))
         }
 
 
         fn current_at(&self, reader: &mut Reader<Self::SwBufReader>, datetime: &NaiveDateTime)
             -> Result<ReturnElt, SwInstallError>
         {
-            Err("/foo/bar/bla.yaml_20181124-212211".to_string())
+            Err(SwInstallError::RuntimeError("/foo/bar/bla.yaml_20181124-212211".to_string()))
         }
     }
 
@@ -181,21 +181,22 @@ mod tests {
 
     impl SwinstallCurrent for MyCurrent2 {
         type SwBufReader = BufReader<File>;
+        type SwElem = ReturnElt;
 
         //const SCHEMA: &'static str = "2";
         fn schema(&self) -> &'static str {
             "2"
         }
 
-        fn current(&self, reader: &mut Reader<Self::SwBufReader>) -> Result<String, SwInstallError> {
-             Ok("/foo/bar/bla.yaml_20181123-090200".to_string())
+        fn current(&self, reader: &mut Reader<Self::SwBufReader>) -> Result<ReturnElt, SwInstallError> {
+             Err(SwInstallError::RuntimeError("/foo/bar/bla.yaml_20181123-090200".to_string()))
         }
 
 
         fn current_at(&self, reader: &mut Reader<Self::SwBufReader>, datetime: &NaiveDateTime)
-            -> Result<String, SwInstallError>
+            -> Result<ReturnElt, SwInstallError>
         {
-            Ok("/foo/bar/bla.yaml_20181124-212211".to_string())
+            Err(SwInstallError::RuntimeError("/foo/bar/bla.yaml_20181124-212211".to_string()))
         }
     }
 

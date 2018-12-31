@@ -18,13 +18,13 @@
 //! journal installations.
 //!
 //! swinstall_store files obey the following naming convention:
-//! ```
+//! ```ignore
 //! <filename>.<ext>_swinstall_store
 //! ```
 //!
 //! versioned files are named thusly:
 //!
-//! ```
+//! ```ignore
 //! <filename>.<ext>_<version>
 //! ```
 //!
@@ -92,7 +92,7 @@ impl Elt {
 }
 impl SwInstallElement for Elt {
 
-    fn from_attrs<'a>(_version: &str, attrs: Attributes<'a>) -> Result<Elt, SwInstallError> {
+    fn from_attrs<'a>( attrs: Attributes<'a>) -> Result<Elt, SwInstallError> {
         let mut is_current = None;
         let mut version = None;
 
@@ -154,7 +154,7 @@ mod tests {
        loop {
             match reader.read_event(&mut buf) {
                         Ok(Event::Empty(ref e)) => {
-                            let elt = Elt::from_attrs("", e.attributes()).expect("could not create elt");
+                            let elt = Elt::from_attrs( e.attributes()).expect("could not create elt");
                             let expected = Elt {
                                 is_current: true,
                                 version: "20161213-093146".to_string(),
@@ -176,7 +176,7 @@ mod tests {
        loop {
             match reader.read_event(&mut buf) {
                         Ok(Event::Empty(ref e)) => {
-                            let elt = Elt::from_attrs("", e.attributes()).expect("could not create elt");
+                            let elt = Elt::from_attrs( e.attributes()).expect("could not create elt");
                             let expected = Elt {
                                 is_current: true,
                                 version: "20161213-093146".to_string(),
@@ -224,7 +224,7 @@ impl SwinstallCurrent for One {
                     debug!("current_at - Event::Empty");
                     if e.name() == b"elt" {
                         debug!("current_at - Event::Empty - elt tag matched");
-                        let elt = Elt::from_attrs("", e.attributes())?;
+                        let elt = Elt::from_attrs( e.attributes())?;
                         debug!("current_at - Event::Empty - Elt::from_attrs returned");
                         let version_str = elt.version.as_str();
                         debug!("current_at - Event::Empty - passing {} to NaiveDateTime::parse_from_str", version_str);
