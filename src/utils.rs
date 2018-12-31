@@ -67,7 +67,7 @@ pub fn versioned_from_swinstall_stack(filepath: &str, version: &str) -> Result<S
     let mut pb = pb.to_path_buf();
 
     pb.pop(); // pop off the file name since we dont need it in the path
-    pb.push("bak");
+    //pb.push("bak");
     pb.push(file_name);
     pb.push(format!("{}_{}", file_name, version));
 
@@ -104,6 +104,14 @@ mod tests {
         let path_str = "/dd/facility/etc/packages.xml";
         let expected = "/dd/facility/etc/bak/packages.xml/packages.xml_0002";
         let path = versioned_from_versionless(path_str, "0002");
+        assert_eq!(path.unwrap(), expected);
+    }
+
+    #[test]
+    fn versioned_file_from_swinstall_stack() {
+        let path_str = "/dd/facility/etc/bak/packages.xml/packages.xml_swinstall_stack";
+        let expected = "/dd/facility/etc/bak/packages.xml/packages.xml_0002";
+        let path = versioned_from_swinstall_stack(path_str, "0002");
         assert_eq!(path.unwrap(), expected);
     }
 }

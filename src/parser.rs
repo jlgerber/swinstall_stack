@@ -176,7 +176,16 @@ mod tests {
         one::One,
         two::Two
     };
-
+    const SCHEMA1_XML: &'static str =
+r#"<stack_history path="/dd/facility/etc/bak/packages.xml/packages.xml_swinstall_stack">
+   <elt is_current="False" version="20181220-090624"/>
+   <elt is_current="False" version="20181220-090616"/>
+   <elt is_current="False" version="20181220-090608"/>
+   <elt is_current="False" version="20181220-090333"/>
+   <elt is_current="True" version="20161213-093146_r575055"/>
+   <elt is_current="False" version="20181220-091955"/>
+   <elt is_current="False" version="20181220-092031"/>
+</stack_history"#;
     //use chrono::{NaiveDateTime};
     //use quick_xml::Reader;
     //use std::io::BufReader;
@@ -191,6 +200,7 @@ mod tests {
         parser.set_default_schema(String::from("1"));
         parser
     }
+
     #[test]
     fn register_schema() {
         let parser = setup_parser();
@@ -211,5 +221,14 @@ mod tests {
         } else {
             panic!("unable to get schema 1");
         };
+    }
+
+    #[test]
+    fn get_swinstall_parser_version() {
+        let parser = setup_parser();
+        let result = parser.current(Box::new(|swinstall: &str| {
+          Ok(quick_xml::Reader::from_str(SCHEMA1_XML))
+        }), "/dd/facility/etc/bak/packages.xml/packages.xml_swinstall_stack").unwrap();
+        assert_eq!(result.as_str(), "/dd/facility/etc/bak/packages.xml/packages.xml_20161213-093146_r575055")
     }
 }
