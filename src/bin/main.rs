@@ -3,8 +3,10 @@ use env_logger::{self, Builder, Env};
 use failure::Error;
 #[allow(unused_imports)]
 use log::{debug, info, warn, error};
+//use quick_xml::Reader;
 use std::{
-    path::PathBuf
+    path::PathBuf,
+    //path::Path,
 };
 use structopt::StructOpt;
 use swinstall_stack::{
@@ -12,7 +14,7 @@ use swinstall_stack::{
     errors::SwInstallError,
     parser::SwinstallParser,
     schemas::{ one, two, SchemaWrapper },
-    utils::swinstall_stack_from_versionless,
+    utils::{ swinstall_stack_from_versionless, reader_from_file_fn },
 };
 
 #[derive(Debug, StructOpt)]
@@ -111,7 +113,10 @@ fn main() -> Result<(), Error> {
     // optparse should guarantee that opt.input can be unwrapped
     let swinstall_stack = swinstall_stack_from_versionless(input_path)?;
     debug!("swinstall_stack: {}", swinstall_stack.as_str());
-    let path =  parser.current_at(swinstall_stack.as_str(), &datetime_at)?;
+
+    let path =  parser.current_at( reader_from_file_fn(),
+        swinstall_stack.as_str(), &datetime_at)?;
+
     println!("\npath: {}\n", path);
     Ok(())
 }
