@@ -7,15 +7,10 @@ use crate::traits::{
 };
 use chrono::NaiveDateTime;
 use crate::errors::SwInstallError;
-use std::{
-    cmp::PartialEq,
-    fs::File,
-    io::BufReader,
-    str::from_utf8,
-};
+
 use quick_xml::{
     Reader,
-    events::{ attributes::Attributes, Event, },
+    events::{ attributes::Attributes, },
 };
 /// Work around for Object Safety issues with associated types.
 /// I introduced this enum to allow us to return a full structure
