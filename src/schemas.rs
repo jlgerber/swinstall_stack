@@ -5,6 +5,8 @@ use crate::errors::SwInstallError;
 use quick_xml::events::attributes::Attributes;
 
 /// Work around for Object Safety issues with associated types.
+/// I introduced this enum to allow us to return a full structure
+/// as opposed to a string.
 #[derive(Debug, PartialEq, Eq)]
 pub enum ReturnElt {
     One(one::Elt),
