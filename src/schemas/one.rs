@@ -58,6 +58,8 @@ use chrono::{ NaiveDateTime };
 use crate::constants::DATETIME_FMT;
 use crate::errors::SwInstallError;
 use crate::traits::{ SwinstallCurrent, SwInstallElement };
+use crate::schemas;
+
 use std::{
     fs::File,
     io::BufReader,
@@ -90,7 +92,7 @@ impl Elt {
 }
 impl SwInstallElement for Elt {
 
-    fn from_attrs<'a>(attrs: Attributes<'a>) -> Result<Elt, SwInstallError> {
+    fn from_attrs<'a>(_version: &str, attrs: Attributes<'a>) -> Result<Elt, SwInstallError> {
         let mut is_current = None;
         let mut version = None;
 
@@ -130,6 +132,14 @@ impl SwInstallElement for Elt {
         debug!("Elt::from_attrs(...) -> {:?}", elt);
         Ok(elt)
     }
+
+    fn version(&self) -> String {
+        let revision = match self.revision {
+            Some(ref r) => format!("_{}",r),
+            None => String::from(""),
+        };
+        format!("{}{}", self.version, revision)
+    }
 }
 
 #[cfg(test)]
@@ -144,7 +154,7 @@ mod tests {
        loop {
             match reader.read_event(&mut buf) {
                         Ok(Event::Empty(ref e)) => {
-                            let elt = Elt::from_attrs(e.attributes()).expect("could not create elt");
+                            let elt = Elt::from_attrs("", e.attributes()).expect("could not create elt");
                             let expected = Elt {
                                 is_current: true,
                                 version: "20161213-093146".to_string(),
@@ -166,7 +176,7 @@ mod tests {
        loop {
             match reader.read_event(&mut buf) {
                         Ok(Event::Empty(ref e)) => {
-                            let elt = Elt::from_attrs(e.attributes()).expect("could not create elt");
+                            let elt = Elt::from_attrs("", e.attributes()).expect("could not create elt");
                             let expected = Elt {
                                 is_current: true,
                                 version: "20161213-093146".to_string(),
@@ -192,13 +202,14 @@ impl One {
 
 impl SwinstallCurrent for One {
     type SwBufReader = BufReader<File>;
+    type SwElem = schemas::ReturnElt;
 
     fn schema(&self) -> &'static str {
             "1"
     }
 
     fn current_at(&self, reader: &mut Reader<Self::SwBufReader>, datetime: &NaiveDateTime)
-        -> Result<String, SwInstallError>
+        -> Result<Self::SwElem, SwInstallError>
     {
         debug!("one::One.current_at called");
         let mut buf = Vec::new();
@@ -213,7 +224,7 @@ impl SwinstallCurrent for One {
                     debug!("current_at - Event::Empty");
                     if e.name() == b"elt" {
                         debug!("current_at - Event::Empty - elt tag matched");
-                        let elt = Elt::from_attrs(e.attributes())?;
+                        let elt = Elt::from_attrs("", e.attributes())?;
                         debug!("current_at - Event::Empty - Elt::from_attrs returned");
                         let version_str = elt.version.as_str();
                         debug!("current_at - Event::Empty - passing {} to NaiveDateTime::parse_from_str", version_str);
@@ -248,11 +259,12 @@ impl SwinstallCurrent for One {
             // 2 - we are not in the datetime range. (presumably we were the prior loop)
             if in_empty && ((current && in_datetime) || !in_datetime) {
                 match last_elt {
-                    Some(ref elt) => {
-                        return match elt.revision {
-                            Some(ref r) => Ok(format!("{}_{}", elt.version, r)),
-                            None => return Ok(elt.version.clone()),
-                        };
+                    Some( elt) => {
+                        return Ok(schemas::ReturnElt::One(elt));
+                        // return match elt.revision {
+                        //     Some(ref r) => Ok(format!("{}_{}", elt.version, r)),
+                        //     None => return Ok(elt.version.clone()),
+                        // };
 
                     }
                     None => {

@@ -36,11 +36,13 @@ use std::fmt::Debug;
 use quick_xml::events::attributes::Attributes;
 
 pub trait SwInstallElement: Debug + PartialEq + Eq + Sized {
-    fn from_attrs<'a>(attrs: Attributes<'a>) -> Result<Self, SwInstallError>;
+    fn from_attrs<'a>(version: &str, attrs: Attributes<'a>) -> Result<Self, SwInstallError>;
+    fn version(&self) -> String;
 }
 
 pub trait SwinstallCurrent: std::fmt::Debug  {
     type SwBufReader;
+    type SwElem: SwInstallElement;
 
     // this sucks. associated const are not object safe so....
     //const SCHEMA: &'static str;
@@ -48,7 +50,7 @@ pub trait SwinstallCurrent: std::fmt::Debug  {
 
     /// retrieve the version string of the current resource, given a reader that points at one or more elt tags
     /// within the swinstall_stack xml document.
-    fn current(&self, reader: &mut Reader<Self::SwBufReader>) -> Result<String, SwInstallError>
+    fn current(&self, reader: &mut Reader<Self::SwBufReader>) -> Result<Self::SwElem, SwInstallError>
     where <Self as SwinstallCurrent>::SwBufReader: std::io::BufRead {
         let now =  Local::now().naive_local();
         self.current_at(reader, &now)
@@ -63,7 +65,7 @@ pub trait SwinstallCurrent: std::fmt::Debug  {
     /// It is the job of the surrounding code to turn the version string into a full path to
     /// the versioned file.
     fn current_at(&self, reader: &mut Reader<Self::SwBufReader>, datetime: &NaiveDateTime)
-        -> Result<String, SwInstallError>
+        -> Result<Self::SwElem, SwInstallError>
     where
         <Self as SwinstallCurrent>::SwBufReader: std::io::BufRead;
 }

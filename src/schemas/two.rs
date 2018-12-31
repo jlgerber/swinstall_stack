@@ -52,9 +52,10 @@ use quick_xml::{
     Reader,
     events::{ attributes::Attributes, Event, },
 };
+use crate::schemas;
 
 #[derive(Debug, PartialEq, Eq)]
-struct Elt {
+pub struct Elt {
     pub action: String,
     pub datetime: String,
     pub hash: String,
@@ -71,7 +72,7 @@ impl Elt {
 
 impl SwInstallElement for Elt {
 
-    fn from_attrs<'a>(attrs: Attributes<'a>) -> Result<Elt, SwInstallError> {
+    fn from_attrs<'a>(_version: &str, attrs: Attributes<'a>) -> Result<Elt, SwInstallError> {
         let mut action = None;
         let mut datetime = None;
         let mut hash = None;
@@ -103,6 +104,10 @@ impl SwInstallElement for Elt {
         debug!("elt: {:?}", elt);
         Ok(elt)
     }
+
+    fn version(&self) -> String {
+        self.version.clone()
+    }
 }
 
 #[cfg(test)]
@@ -116,7 +121,7 @@ mod tests {
        loop {
             match reader.read_event(&mut buf) {
                         Ok(Event::Empty(ref e)) => {
-                            let elt = Elt::from_attrs(e.attributes()).expect("could not create elt");
+                            let elt = Elt::from_attrs("", e.attributes()).expect("could not create elt");
                             let expected = Elt {
                                 action: String::from("install"),
                                 datetime: "20180702-144204".to_string(),
@@ -145,13 +150,14 @@ impl Two {
 
 impl SwinstallCurrent for Two {
     type SwBufReader = BufReader<File>;
+    type SwElem = schemas::ReturnElt;
 
     fn schema(&self) -> &'static str {
             "2"
     }
 
     fn current_at(&self, reader: &mut Reader<Self::SwBufReader>, datetime: &NaiveDateTime)
-        -> Result<String, SwInstallError>
+        -> Result<Self::SwElem, SwInstallError>
     {
         let mut buf = Vec::new();
         loop {
@@ -159,10 +165,11 @@ impl SwinstallCurrent for Two {
                 Ok(Event::Empty(ref e)) => {
                     if e.name() == b"elt" {
                         debug!("Event::Empty - elt tag matched");
-                        let elt = Elt::from_attrs(e.attributes())?;
+                        let elt = Elt::from_attrs("",e.attributes())?;
                         let dt = NaiveDateTime::parse_from_str(elt.datetime.as_str(), DATETIME_FMT)?;
                         if dt <= *datetime {
-                            return Ok(elt.version.clone());
+
+                            return Ok(schemas::ReturnElt::Two(elt));
                         }
                     }
                 },

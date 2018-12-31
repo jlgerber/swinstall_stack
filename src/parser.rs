@@ -4,7 +4,8 @@
 use chrono::{ NaiveDateTime, Local };
 use crate::{
     SwInstallError,
-    traits::SwinstallCurrent,
+    schemas::ReturnElt,
+    traits::{ SwinstallCurrent, SwInstallElement, },
     utils::versioned_from_swinstall_stack
 };
 use log::{debug};
@@ -20,7 +21,7 @@ use quick_xml::{
 };
 
 type SwReader = Reader<BufReader<File>>;
-type SwinstallCurrentRegistry = HashMap<&'static str, Box<dyn SwinstallCurrent<SwBufReader = BufReader<File>>> > ;
+type SwinstallCurrentRegistry = HashMap<&'static str, Box<dyn SwinstallCurrent<SwBufReader = BufReader<File>, SwElem=ReturnElt>> > ;
 
 #[derive(Debug)]
 pub struct SwinstallParser {
@@ -44,7 +45,8 @@ impl SwinstallParser {
     /// Register a struct implementing SwinstallCurrent with the schema registry,
     /// which affords for handling different generations of an swinstall_stack
     /// from the same code.
-    pub fn register(&mut self, value: Box<dyn SwinstallCurrent<SwBufReader = BufReader<File>>>) {
+    pub fn register(&mut self, value: Box<dyn SwinstallCurrent<SwBufReader = BufReader<File>, SwElem = ReturnElt>>)
+    {
         self.registry.insert(value.schema(), value);
     }
 
@@ -62,7 +64,9 @@ impl SwinstallParser {
     }
 
     /// Retrieve the SwinstallComponent registered against a paritcular schema.
-    pub fn get_component(&self, schema: &str) -> Option<&Box<dyn SwinstallCurrent<SwBufReader = BufReader<File>>>> {
+    pub fn get_component(&self, schema: &str)
+    -> Option<&Box<dyn SwinstallCurrent<SwBufReader = BufReader<File>, SwElem = ReturnElt >>>
+    {
         self.registry.get(schema)
     }
 
@@ -83,7 +87,7 @@ impl SwinstallParser {
     }
 
     // Get the current version as a String
-    fn current_version<'a>(&self, reader: &mut SwReader, schema: &str, datetime: &NaiveDateTime) -> Result<String, failure::Error> {
+    fn current_version<'a>(&self, reader: &mut SwReader, schema: &str, datetime: &NaiveDateTime) -> Result<ReturnElt, failure::Error> {
 
         let elt_reader = self.get_component(schema).ok_or(SwInstallError::RuntimeError(format!("Unable to get reader for schema: {}", schema)))?;
         debug!("calling elt_reader.current_at(reader, {})", datetime);
@@ -114,7 +118,7 @@ impl SwinstallParser {
 
                         debug!("current_at - calling self.current_version(...)");
                         // we find a current file or we error
-                        let version_string = self.current_version(&mut reader, schema.as_str(), datetime)?;
+                        let version_string = self.current_version(&mut reader, schema.as_str(), datetime)?.version();
                         // we construct the full path to the versioned file out of the full path to the swinstall_stack
                         // and the version_string
                         let versioned_file = versioned_from_swinstall_stack(swinstall_stack, version_string.as_str())?;
@@ -153,7 +157,7 @@ mod tests {
 
     impl SwinstallCurrent for MyCurrent {
         type SwBufReader = BufReader<File>;
-
+        type SwElem = ReturnElt;
         //const SCHEMA: &'static str = "1";
         fn schema(&self) -> &'static str {
             "1"
@@ -165,9 +169,9 @@ mod tests {
 
 
         fn current_at(&self, reader: &mut Reader<Self::SwBufReader>, datetime: &NaiveDateTime)
-            -> Result<String, SwInstallError>
+            -> Result<ReturnElt, SwInstallError>
         {
-            Ok("/foo/bar/bla.yaml_20181124-212211".to_string())
+            Err("/foo/bar/bla.yaml_20181124-212211".to_string())
         }
     }
 
