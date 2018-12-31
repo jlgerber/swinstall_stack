@@ -144,94 +144,48 @@ impl SwinstallParser {
 }
 
 
-// #[cfg(test)]
-// mod tests {
-//     use super::*;
+#[cfg(test)]
+mod tests {
+    use super::*;
 
-//     use crate::schemas::one::One;
+    use crate::schemas::{
+        one::One,
+        two::Two
+    };
 
-//     use chrono::{NaiveDateTime};
-//     use quick_xml::Reader;
-//     use std::io::BufReader;
-//     use std::fs::File;
+    //use chrono::{NaiveDateTime};
+    //use quick_xml::Reader;
+    //use std::io::BufReader;
+    //use std::fs::File;
 
-//     #[derive(Debug)]
-//     struct MyCurrent;
+    fn setup_parser() -> SwinstallParser {
+        let mycur = One {};
+        let mycur2 = Two {};
+        let mut parser = SwinstallParser::new();
+        parser.register(SchemaWrapper::One(mycur));
+        parser.register(SchemaWrapper::Two(mycur2));
+        parser.set_default_schema(String::from("1"));
+        parser
+    }
+    #[test]
+    fn register_schema() {
+        let parser = setup_parser();
+        assert_eq!(parser.registry.len(), 2);
+    }
 
-//     impl SwinstallCurrent for MyCurrent {
-//         type SwBufReader = BufReader<File>;
-//         type SwElem = ReturnElt;
-//         //const SCHEMA: &'static str = "1";
-//         fn schema(&self) -> &'static str {
-//             "1"
-//         }
+    #[test]
+    fn get_swinstall_parser() {
+        let parser = setup_parser();
+        if let Some(result) = parser.get_component("2") {
+            assert_eq!(result.schema(), "2");
+        } else {
+            panic!("unable to get schema 2");
+        };
 
-//         fn current(&self, reader: &mut Reader<Self::SwBufReader>) -> Result<ReturnElt, SwInstallError> {
-//              Err(SwInstallError::RuntimeError("/foo/bar/bla.yaml_20181123-090200".to_string()))
-//         }
-
-
-//         fn current_at(&self, reader: &mut Reader<Self::SwBufReader>, datetime: &NaiveDateTime)
-//             -> Result<ReturnElt, SwInstallError>
-//         {
-//             Err(SwInstallError::RuntimeError("/foo/bar/bla.yaml_20181124-212211".to_string()))
-//         }
-//     }
-
-
-//     #[derive(Debug)]
-//     struct MyCurrent2;
-
-//     impl SwinstallCurrent for MyCurrent2 {
-//         type SwBufReader = BufReader<File>;
-//         type SwElem = ReturnElt;
-
-//         //const SCHEMA: &'static str = "2";
-//         fn schema(&self) -> &'static str {
-//             "2"
-//         }
-
-//         fn current(&self, reader: &mut Reader<Self::SwBufReader>) -> Result<ReturnElt, SwInstallError> {
-//              Err(SwInstallError::RuntimeError("/foo/bar/bla.yaml_20181123-090200".to_string()))
-//         }
-
-
-//         fn current_at(&self, reader: &mut Reader<Self::SwBufReader>, datetime: &NaiveDateTime)
-//             -> Result<ReturnElt, SwInstallError>
-//         {
-//             Err(SwInstallError::RuntimeError("/foo/bar/bla.yaml_20181124-212211".to_string()))
-//         }
-//     }
-
-//     #[test]
-//     fn register_schema() {
-//         let mycur = One {};
-//         let mycur2 = MyCurrent2 {};
-//         let mut parser = SwinstallParser::new();
-//         parser.register(Box::new(mycur));
-//         parser.register(Box::new(mycur2));
-//         parser.set_default_schema(String::from("2"));
-//         assert_eq!(parser.registry.len(), 2);
-//     }
-
-//     #[test]
-//     fn get_swinstall_parser() {
-//         let mycur = MyCurrent {};
-//         let mycur2 = MyCurrent2 {};
-//         let mut parser = SwinstallParser::new();
-//         parser.register(Box::new(mycur));
-//         parser.register(Box::new(mycur2));
-
-//         if let Some(result) = parser.get_component("2") {
-//             assert_eq!(result.schema(), "2");
-//         } else {
-//             panic!("unable to get schema 2");
-//         };
-
-//         if let Some(result) = parser.get_component("1") {
-//             assert_eq!(result.schema(), "1");
-//         } else {
-//             panic!("unable to get schema 1");
-//         };
-//     }
-// }
+        if let Some(result) = parser.get_component("1") {
+            assert_eq!(result.schema(), "1");
+        } else {
+            panic!("unable to get schema 1");
+        };
+    }
+}
