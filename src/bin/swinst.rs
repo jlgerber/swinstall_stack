@@ -1,13 +1,19 @@
-use chrono::{Datelike, Timelike, Local, NaiveDate, NaiveTime, NaiveDateTime};
-use env_logger::{self, Builder, Env};
+//! bin/swinst.rs
+//!
+//! command line tool for introspecting swinstall_log
+use chrono::{
+    Datelike,
+    Timelike,
+    Local,
+    NaiveDate,
+    NaiveTime,
+    NaiveDateTime
+};
+use env_logger::{ self, Builder, Env };
 use failure::Error;
 #[allow(unused_imports)]
 use log::{debug, info, warn, error};
-//use quick_xml::Reader;
-use std::{
-    path::PathBuf,
-    //path::Path,
-};
+use std::path::PathBuf;
 use structopt::StructOpt;
 use swinstall_stack::{
     constants::{DEFAULT_LOG_LEVEL, VERBOSE_LOG_LEVEL},

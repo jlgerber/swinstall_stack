@@ -6,7 +6,7 @@ edition = "2018"
 
 [[bin]]
 name="swinst"
-path="src/bin/main.rs"
+path="src/bin/swinst.rs"
 
 [dependencies]
 quick-xml = "0.13.1"
