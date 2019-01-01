@@ -273,7 +273,6 @@ r#"<?xml version="1.0" encoding="UTF-8"?>
         assert_eq!(result.as_str(), "/dd/facility/etc/bak/packages.xml/packages.xml_5");
     }
 
-
     #[test]
     fn get_parser_current_at_pre_schema2() {
         let parser = setup_parser();

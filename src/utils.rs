@@ -98,6 +98,7 @@ mod tests {
         let path = swinstall_stack_from_versionless(path_str);
         assert_eq!(path.unwrap(), expected);
     }
+
     #[test]
     fn versioned_file_from_versionless_file() {
         let path_str = "/dd/facility/etc/packages.xml";
