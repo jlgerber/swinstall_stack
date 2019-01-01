@@ -67,7 +67,6 @@ pub fn versioned_from_swinstall_stack(filepath: &str, version: &str) -> Result<S
     let mut pb = pb.to_path_buf();
 
     pb.pop(); // pop off the file name since we dont need it in the path
-    //pb.push("bak");
     pb.push(file_name);
     pb.push(format!("{}_{}", file_name, version));
 
