@@ -7,9 +7,11 @@ use crate::traits::{
 };
 use chrono::NaiveDateTime;
 use crate::errors::SwInstallError;
+use crate::actions::Action;
 
 use quick_xml::{
     Reader,
+    Writer,
     events::{ attributes::Attributes, },
 };
 /// Work around for Object Safety issues with associated types.
@@ -65,5 +67,14 @@ impl SwinstallCurrent for SchemaWrapper {
             SchemaWrapper::One(ref one) => one.current_at(reader, datetime),
             SchemaWrapper::Two(ref two) => two.current_at(reader, datetime),
         }
+    }
+
+    fn update<R, W>(&self, action: Action, reader: &mut Reader<R>, writer: &mut Writer<W>, elem: Self::SwElem)
+            -> Result<(), SwInstallError>
+        where
+        R: std::io::BufRead,
+        W: std::io::Write
+    {
+        Ok(())
     }
 }

@@ -37,17 +37,19 @@
 
 use chrono::{ NaiveDateTime };
 use crate::{
+    actions::Action,
     constants::DATETIME_FMT,
     errors::SwInstallError,
+    schemas,
     traits::{ SwinstallCurrent, SwinstallElement  },
 };
 #[allow(unused_imports)]
 use log::{ debug, info, warn };
 use quick_xml::{
-    Reader,
     events::{ attributes::Attributes, Event, },
+    Reader,
+    Writer,
 };
-use crate::schemas;
 use std::{
     cmp::PartialEq,
     str::from_utf8,
@@ -190,5 +192,15 @@ impl SwinstallCurrent for Two {
             // if we don't keep a borrow elsewhere, we can clear the buffer to keep memory usage low
             buf.clear();
         }
+    }
+
+    /// Update the swinstall_stack with a new element.
+    fn update<R, W>(&self, action: Action, reader: &mut Reader<R>, writer: &mut Writer<W>, elem: Self::SwElem)
+            -> Result<(), SwInstallError>
+        where
+        R: std::io::BufRead,
+        W: std::io::Write
+    {
+        Ok(())
     }
 }
