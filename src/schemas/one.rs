@@ -57,7 +57,7 @@
 use chrono::{ NaiveDateTime };
 use crate::constants::DATETIME_FMT;
 use crate::errors::SwInstallError;
-use crate::traits::{ SwinstallCurrent, SwInstallElement };
+use crate::traits::{ SwinstallCurrent, SwinstallElement  };
 use crate::schemas;
 use std::{
     cmp::PartialEq,
@@ -90,7 +90,7 @@ impl Elt {
         }
     }
 }
-impl SwInstallElement for Elt {
+impl SwinstallElement  for Elt {
 
     fn from_attrs<'a>( attrs: Attributes<'a>) -> Result<Elt, SwInstallError> {
         let mut is_current = None;

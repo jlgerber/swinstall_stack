@@ -39,7 +39,7 @@ use chrono::{NaiveDateTime};
 use crate::{
     constants::DATETIME_FMT,
     errors::SwInstallError,
-    traits::{ SwinstallCurrent, SwInstallElement },
+    traits::{ SwinstallCurrent, SwinstallElement  },
 };
 #[allow(unused_imports)]
 use log::{ debug, info, warn };
@@ -71,7 +71,7 @@ impl Elt {
     }
 }
 
-impl SwInstallElement for Elt {
+impl SwinstallElement  for Elt {
 
     fn from_attrs<'a>(attrs: Attributes<'a>) -> Result<Elt, SwInstallError> {
         let mut action = None;

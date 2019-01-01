@@ -38,20 +38,20 @@ use quick_xml::events::attributes::Attributes;
 
 /// This trait targets the enum which wraps each of the schema return Elements and is
 /// used to help circumvent issues with Object Safety.
-pub trait SwInstallElementWrapper: Debug + PartialEq + Eq + Sized {
+pub trait SwinstallElementWrapper: Debug + PartialEq + Eq + Sized {
     fn from_attrs<'a>(version: &str, attrs: Attributes<'a>) -> Result<Self, SwInstallError>;
     fn version(&self) -> String;
 }
 
 /// This trait defines common interface for the Elt element which represents
 /// an entry in the swinstall_stack for a specific schema.
-pub trait SwInstallElement: Debug + PartialEq + Eq + Sized {
+pub trait SwinstallElement : Debug + PartialEq + Eq + Sized {
     fn from_attrs<'a>(attrs: Attributes<'a>) -> Result<Self, SwInstallError>;
     fn version(&self) -> String;
 }
 
 pub trait SwinstallCurrent: std::fmt::Debug + std::cmp::PartialEq + Eq {
-    type SwElem: SwInstallElementWrapper;
+    type SwElem: SwinstallElementWrapper;
 
     // this sucks. associated const are not object safe so....
     //const SCHEMA: &'static str;

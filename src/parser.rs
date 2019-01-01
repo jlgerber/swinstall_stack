@@ -5,7 +5,7 @@ use chrono::{ NaiveDateTime, Local };
 use crate::{
     SwInstallError,
     schemas::{ReturnElt, SchemaWrapper },
-    traits::{ SwinstallCurrent,  SwInstallElementWrapper, },
+    traits::{ SwinstallCurrent,  SwinstallElementWrapper, },
     utils::versioned_from_swinstall_stack,
 };
 use log::{debug};

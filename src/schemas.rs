@@ -2,8 +2,8 @@ pub mod one;
 pub mod two;
 use crate::traits::{
     SwinstallCurrent,
-    SwInstallElementWrapper,
-    SwInstallElement,
+    SwinstallElementWrapper,
+    SwinstallElement ,
 };
 use chrono::NaiveDateTime;
 use crate::errors::SwInstallError;
@@ -21,7 +21,7 @@ pub enum ReturnElt {
     Two(two::Elt),
 }
 
-impl SwInstallElementWrapper for ReturnElt {
+impl SwinstallElementWrapper for ReturnElt {
 
     fn from_attrs<'a>(version: &str, attrs: Attributes<'a>) -> Result<Self, SwInstallError> {
         match version {
