@@ -30,11 +30,10 @@
 //! but I didn't want to pattern match against each enum branch for each elt tag,
 //! as the each xml file should have a uniform elt tag structure based on its schema.
 
-use chrono::{NaiveDateTime, Local};
+use chrono::{ NaiveDateTime, Local };
 use crate::errors::SwInstallError;
-use quick_xml::Reader;
+use quick_xml::{ Reader, events::attributes::Attributes };
 use std::fmt::Debug;
-use quick_xml::events::attributes::Attributes;
 
 /// This trait targets the enum which wraps each of the schema return Elements and is
 /// used to help circumvent issues with Object Safety.

@@ -35,7 +35,7 @@
 //! </stack_history>
 //! ```
 
-use chrono::{NaiveDateTime};
+use chrono::{ NaiveDateTime };
 use crate::{
     constants::DATETIME_FMT,
     errors::SwInstallError,
@@ -43,17 +43,15 @@ use crate::{
 };
 #[allow(unused_imports)]
 use log::{ debug, info, warn };
-use std::{
-    cmp::PartialEq,
-    //fs::File,
-    //io::BufReader,
-    str::from_utf8,
-};
 use quick_xml::{
     Reader,
     events::{ attributes::Attributes, Event, },
 };
 use crate::schemas;
+use std::{
+    cmp::PartialEq,
+    str::from_utf8,
+};
 
 #[derive(Debug, PartialEq, Eq)]
 pub struct Elt {

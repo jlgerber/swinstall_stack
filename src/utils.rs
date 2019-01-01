@@ -4,7 +4,7 @@
 //!
 
 use crate::errors::SwInstallError;
-use std::path::{PathBuf};
+use std::path::{ PathBuf };
 
 /// Given the path to a versionless swinstalled file, get the path to
 /// the swinstall_stack.

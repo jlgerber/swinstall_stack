@@ -59,17 +59,15 @@ use crate::constants::DATETIME_FMT;
 use crate::errors::SwInstallError;
 use crate::traits::{ SwinstallCurrent, SwinstallElement  };
 use crate::schemas;
-use std::{
-    cmp::PartialEq,
-   // fs::File,
-   // io::BufReader,
-    str::{ FromStr, from_utf8, }
-};
 #[allow(unused_imports)]
 use log::{debug, info, warn};
 use quick_xml::{
     events::{attributes::Attributes, Event, },
     Reader,
+};
+use std::{
+    cmp::PartialEq,
+    str::{ FromStr, from_utf8 },
 };
 
 /// Model the elt tag contents from swinstall_log

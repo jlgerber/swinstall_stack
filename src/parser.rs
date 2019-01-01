@@ -5,20 +5,15 @@ use chrono::{ NaiveDateTime, Local };
 use crate::{
     SwInstallError,
     schemas::{ReturnElt, SchemaWrapper },
-    traits::{ SwinstallCurrent,  SwinstallElementWrapper, },
+    traits::{ SwinstallCurrent,  SwinstallElementWrapper },
     utils::versioned_from_swinstall_stack,
 };
 use log::{debug};
-use std::{
-    collections::HashMap,
-    //io::BufReader,
-    //fs::File,
-    //path::{Path,},
-};
 use quick_xml::{
     events::{ BytesStart, Event },
     Reader,
 };
+use std::collections::HashMap;
 
 //type SwReader = Reader<BufReader<File>>;
 type SwinstallCurrentRegistry = HashMap<&'static str, SchemaWrapper > ;
