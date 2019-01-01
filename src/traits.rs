@@ -32,8 +32,9 @@
 
 use chrono::{ NaiveDateTime, Local };
 use crate::errors::SwInstallError;
-use quick_xml::{ Reader, events::attributes::Attributes };
+use quick_xml::{ Reader, Writer, events::attributes::Attributes };
 use std::fmt::Debug;
+use crate::actions::Action;
 
 /// This trait targets the enum which wraps each of the schema return Elements and is
 /// used to help circumvent issues with Object Safety.
@@ -76,4 +77,11 @@ pub trait SwinstallCurrent: std::fmt::Debug + std::cmp::PartialEq + Eq {
         -> Result<Self::SwElem, SwInstallError>
     where
        T: std::io::BufRead;
+
+    /// add a new element to the swinstall_stack and make it current
+    fn update<R, W>(&self, action: Action, reader: &mut Reader<R>, writer: &mut Writer<W>, elem: Self::SwElem)
+        -> Result<(), SwInstallError>
+    where
+       R: std::io::BufRead,
+       W: std::io::Write;
 }
