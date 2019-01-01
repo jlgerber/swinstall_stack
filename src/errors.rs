@@ -38,6 +38,8 @@ pub enum SwInstallError {
     ParseIntError(String),
     #[fail(display = "ParseBoolError - failed to parse bool: {}", _0)]
     ParseBoolError(String),
+    #[fail(display = "InvalidAction - supplied unsupported action str in new: {}", _0)]
+    InvalidAction(String),
 }
 
 impl From<quick_xml::Error> for SwInstallError {
