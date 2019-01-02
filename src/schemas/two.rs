@@ -47,18 +47,15 @@ use crate::{
 use log::{ debug, info, warn };
 use quick_xml::{
     events::{
-        attributes::Attributes,
-        attributes::Attribute,
+        attributes::{ Attributes, Attribute },
         Event,
         BytesStart,
-        BytesEnd,
     },
     Reader,
     Writer,
 };
 use std::{
     cmp::PartialEq,
-    io::Cursor,
     str::from_utf8,
 };
 
@@ -234,6 +231,9 @@ impl SwinstallCurrent for Two {
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::{
+        io::Cursor,
+    };
     #[test]
     fn elt_from_attrs() {
        let swinstall_stack_elt_tags = r#"<elt action="install" datetime="20180702-144204" hash="194f835569a79ba433" version="3"/>"#;
