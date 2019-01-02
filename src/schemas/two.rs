@@ -38,7 +38,7 @@
 use chrono::{ NaiveDateTime };
 use crate::{
     actions::Action,
-    constants::DATETIME_FMT,
+    constants::{ DATETIME_FMT, TAG_ELT },
     errors::SwInstallError,
     schemas,
     traits::{ SwinstallCurrent, SwinstallElement  },
@@ -46,12 +46,19 @@ use crate::{
 #[allow(unused_imports)]
 use log::{ debug, info, warn };
 use quick_xml::{
-    events::{ attributes::Attributes, Event, },
+    events::{
+        attributes::Attributes,
+        attributes::Attribute,
+        Event,
+        BytesStart,
+        BytesEnd,
+    },
     Reader,
     Writer,
 };
 use std::{
     cmp::PartialEq,
+    io::Cursor,
     str::from_utf8,
 };
 
@@ -111,34 +118,6 @@ impl SwinstallElement  for Elt {
     }
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
-    #[test]
-        fn elt_from_attrs() {
-       let str_from = r#"<elt action="install" datetime="20180702-144204" hash="194f835569a79ba433" version="3"/>"#;
-       let mut reader = Reader::from_str(str_from);
-       let mut buf = Vec::new();
-       loop {
-            match reader.read_event(&mut buf) {
-                        Ok(Event::Empty(ref e)) => {
-                            let elt = Elt::from_attrs( e.attributes()).expect("could not create elt");
-                            let expected = Elt {
-                                action: String::from("install"),
-                                datetime: "20180702-144204".to_string(),
-                                hash: String::from("194f835569a79ba433"),
-                                version: "3".to_string(),
-                            };
-
-                            assert_eq!(elt, expected);
-                            break;
-                        }
-                        _ => {}
-            }
-        }
-    }
-}
-
 /// Model the elt tag contents from swinstall_log
 #[derive(Debug, Eq)]
 pub struct Two;
@@ -194,13 +173,127 @@ impl SwinstallCurrent for Two {
         }
     }
 
-    /// Update the swinstall_stack with a new element.
+    /// Update the swinstall_stack with a new element. We assume that the outer
+    /// block has already been written and we are only responsible for writing
+    /// the Elements (Elt tags)
     fn update<R, W>(&self, action: Action, reader: &mut Reader<R>, writer: &mut Writer<W>, elem: Self::SwElem)
             -> Result<(), SwInstallError>
         where
         R: std::io::BufRead,
         W: std::io::Write
     {
-        Ok(())
+        match action {
+            Action::Install(ref version) => {
+                let mut cnt = 0;
+                let mut buf = Vec::new();
+
+                let elem = match elem {
+                    schemas::ReturnElt::Two(e) => e,
+                    _ => panic!("wrong type of ReturnELt"),
+                };
+
+                loop {
+                     match reader.read_event(&mut buf) {
+                        Ok(Event::Start(ref e)) => {
+                            writer.write_event(Event::Start(e.to_owned())).is_ok();
+                        }
+                        Ok(Event::Empty(ref e)) if e.name() == TAG_ELT => {
+                            if cnt == 0 {
+                                // we will insert here
+                                let tag_vec = TAG_ELT.to_vec();
+                                let tag_len = tag_vec.len();
+                                let mut bselem = BytesStart::owned(tag_vec, tag_len);
+                                bselem.push_attribute(Attribute::from(("action", elem.action.as_str())));
+                                bselem.push_attribute(Attribute::from( ("datetime", elem.datetime.as_str()) ));
+                                bselem.push_attribute(Attribute::from(("hash", elem.hash.as_str()) ));
+                                bselem.push_attribute(Attribute::from(("version", elem.version.as_str())));
+                                writer.write_event(Event::Empty(bselem)).is_ok();
+                                cnt +=1;
+                            }
+
+                            writer.write_event(Event::Empty(e.to_owned())).is_ok();
+
+                            // // crates a new element ... alternatively we could reuse `e` by calling
+                            // // `e.into_owned()`
+                            // let mut elem = BytesStart::owned(b"my_elem".to_vec(), "my_elem".len());
+
+                            // // collect existing attributes
+                            // elem.extend_attributes(e.attributes().map(|attr| attr.unwrap()));
+
+                            // // copy existing attributes, adds a new my-key="some value" attribute
+                            // elem.push_attribute(("my-key", "some value"));
+
+                            // // writes the event to the writer
+                            // assert!(writer.write_event(Event::Start(elem)).is_ok());
+                        },
+                        Ok(Event::End(ref e))  => {
+                            writer.write_event(Event::End(e.to_owned())).is_ok();
+                        },
+                        Ok(Event::Eof) => break,
+                        Ok(e) => assert!(writer.write_event(e).is_ok()),
+                        // or using the buffer
+                        // Ok(e) => assert!(writer.write(&buf).is_ok()),
+                        Err(e) => panic!("Error at position {}: {:?}", reader.buffer_position(), e),
+                    }
+                    buf.clear();
+                }
+                Ok(())
+            }
+            _ => unimplemented!()
+        }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn elt_from_attrs() {
+       let swinstall_stack_elt_tags = r#"<elt action="install" datetime="20180702-144204" hash="194f835569a79ba433" version="3"/>"#;
+       let mut reader = Reader::from_str(swinstall_stack_elt_tags);
+       let mut buf = Vec::new();
+       loop {
+            match reader.read_event(&mut buf) {
+                        Ok(Event::Empty(ref e)) => {
+                            let elt = Elt::from_attrs( e.attributes()).expect("could not create elt");
+                            let expected = Elt {
+                                action: String::from("install"),
+                                datetime: "20180702-144204".to_string(),
+                                hash: String::from("194f835569a79ba433"),
+                                version: "3".to_string(),
+                            };
+
+                            assert_eq!(elt, expected);
+                            break;
+                        }
+                        _ => {}
+            }
+        }
+    }
+
+    #[test]
+    fn update_two() {
+
+        let two = Two::new();
+        let swinstall_stack_elt_tags = r#"<elt action="install" datetime="20180702-144204" hash="194f835569a79ba433" version="3"/>"#;
+        // we ultimately want a call like:
+        // let file = "/dd/facility/etc/packages.xml";
+        // install_file(file)
+        // where fn install_file()
+        let mut writer = Writer::new(Cursor::new(Vec::new()));
+        let mut reader = Reader::from_str(swinstall_stack_elt_tags);
+        let action = Action::Install("4".to_string());
+        let elem = Elt::new(action.to_string(), "20190101-113000".to_string(), "124a835569a79ba433".to_string(), action.version());
+        //
+        let result = two.update( action,
+            &mut reader,
+            &mut writer,
+            schemas::ReturnElt::Two(elem)
+        );
+        assert_eq!(result.unwrap(), ());
+        let result = writer.into_inner().into_inner();
+        let result = String::from_utf8(result).unwrap();
+        let expected = r#"<elt action="install" datetime="20190101-113000" hash="124a835569a79ba433" version="4"/><elt action="install" datetime="20180702-144204" hash="194f835569a79ba433" version="3"/>"#;
+        assert_eq!(result.as_str(), expected);
     }
 }
