@@ -69,12 +69,20 @@ impl SwinstallCurrent for SchemaWrapper {
         }
     }
 
-    fn update<R, W>(&self, action: Action, reader: &mut Reader<R>, writer: &mut Writer<W>, elem: Self::SwElem)
-            -> Result<(), SwInstallError>
-        where
+    fn update<R, W> (
+        &self,
+        action: Action,
+        reader: &mut Reader<R>,
+        writer: &mut Writer<W>,
+        elem: Self::SwElem
+    ) -> Result<(), SwInstallError>
+    where
         R: std::io::BufRead,
         W: std::io::Write
     {
-        Ok(())
+        match *self {
+            SchemaWrapper::One(ref one) => one.update(action, reader, writer, elem),
+            SchemaWrapper::Two(ref two) => two.update(action, reader, writer, elem),
+        }
     }
 }
