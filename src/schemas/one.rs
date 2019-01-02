@@ -84,7 +84,7 @@ pub struct Elt {
 }
 
 impl Elt {
-    pub fn new(is_current: Pybool, version: String) -> Self {
+    pub fn new( is_current: Pybool, version: String ) -> Self {
         let mut pieces: Vec<String> = version.split("_").map(|x| x.to_string()).collect();
         let revision = if pieces.len() == 2 { pieces.pop() } else { None };
         let version = pieces.pop().unwrap_or("10000101-010101".to_string());
@@ -118,7 +118,7 @@ impl SwinstallElement  for Elt {
             Pybool::from_str(
                 from_utf8(
                     &is_current
-                    .ok_or(SwInstallError::MissingEltAttribute)?
+                    .ok_or( SwInstallError::MissingEltAttribute )?
                     .into_owned()
                 )?
                 .to_string()
@@ -127,7 +127,7 @@ impl SwinstallElement  for Elt {
             )?,
             from_utf8(
                 &version
-                .ok_or(SwInstallError::MissingEltAttribute)?
+                .ok_or( SwInstallError::MissingEltAttribute )?
                 .into_owned()
             )?
             .to_string(),
@@ -138,10 +138,10 @@ impl SwinstallElement  for Elt {
 
     fn version(&self) -> String {
         let revision = match self.revision {
-            Some(ref r) => format!("_{}",r),
+            Some( ref r ) => format!("_{}", r ),
             None => String::from(""),
         };
-        format!("{}{}", self.version, revision)
+        format!( "{}{}", self.version, revision )
     }
 }
 
@@ -154,7 +154,7 @@ impl One {
     }
 
     // construct new ByteStart from supplied ELt
-    fn new_elem(&self, elem: &schemas::ReturnElt) -> BytesStart {
+    fn new_elem( &self, elem: &schemas::ReturnElt ) -> BytesStart {
         // extract Elt
         let elem = match elem {
             schemas::ReturnElt::One(e) => e,
@@ -184,7 +184,7 @@ impl SwinstallCurrent for One {
             "1"
     }
 
-    fn current_at<T>(&self, reader: &mut Reader<T>, datetime: &NaiveDateTime)
+    fn current_at<T>( &self, reader: &mut Reader<T>, datetime: &NaiveDateTime )
         -> Result<Self::SwElem, SwInstallError>
     where
         T: std::io::BufRead
@@ -209,12 +209,14 @@ impl SwinstallCurrent for One {
                         let elt = Elt::from_attrs( e.attributes())?;
                         debug!("current_at - Event::Empty - Elt::from_attrs returned");
                         let version_str = elt.version.as_str();
-                        debug!("current_at - Event::Empty - passing {} to NaiveDateTime::parse_from_str", version_str);
+                        debug!("current_at - Event::Empty - passing {} to NaiveDateTime::parse_from_str",
+                               version_str);
                         let dt = NaiveDateTime::parse_from_str(version_str, DATETIME_FMT)?;
                         // update loop state variables
                         in_datetime =  dt <= *datetime;
                         current = elt.is_current.as_bool() ;
-                        debug!("current_at - Event::Empty - state vars: <in_datetime: {} current: {}>", in_datetime, current);
+                        debug!("current_at - Event::Empty - state vars: <in_datetime: {} current: {}>",
+                               in_datetime, current);
                         // we only update the last_elt if we are in the valid datetime range
                         // as specified by the user.
                         if in_datetime {
@@ -259,9 +261,14 @@ impl SwinstallCurrent for One {
     }
 
     /// Update the swinstall_stack with a new element.
-    fn update<R, W>(&self, action: Action, reader: &mut Reader<R>, writer: &mut Writer<W>, elem: Self::SwElem)
-            -> Result<(), SwInstallError>
-        where
+    fn update<R, W>(
+        &self,
+        action: Action,
+        reader: &mut Reader<R>,
+        writer: &mut Writer<W>,
+        elem: Self::SwElem
+    ) -> Result<(), SwInstallError>
+    where
         R: std::io::BufRead,
         W: std::io::Write
     {

@@ -173,9 +173,14 @@ impl SwinstallCurrent for Two {
     /// Update the swinstall_stack with a new element. We assume that the outer
     /// block has already been written and we are only responsible for writing
     /// the Elements (Elt tags)
-    fn update<R, W>(&self, action: Action, reader: &mut Reader<R>, writer: &mut Writer<W>, elem: Self::SwElem)
-            -> Result<(), SwInstallError>
-        where
+    fn update<R, W>(
+        &self,
+        action: Action,
+        reader: &mut Reader<R>,
+        writer: &mut Writer<W>,
+        elem: Self::SwElem
+    ) -> Result<(), SwInstallError>
+    where
         R: std::io::BufRead,
         W: std::io::Write
     {
