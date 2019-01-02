@@ -212,19 +212,6 @@ impl SwinstallCurrent for Two {
                             }
 
                             writer.write_event(Event::Empty(e.to_owned())).is_ok();
-
-                            // // crates a new element ... alternatively we could reuse `e` by calling
-                            // // `e.into_owned()`
-                            // let mut elem = BytesStart::owned(b"my_elem".to_vec(), "my_elem".len());
-
-                            // // collect existing attributes
-                            // elem.extend_attributes(e.attributes().map(|attr| attr.unwrap()));
-
-                            // // copy existing attributes, adds a new my-key="some value" attribute
-                            // elem.push_attribute(("my-key", "some value"));
-
-                            // // writes the event to the writer
-                            // assert!(writer.write_event(Event::Start(elem)).is_ok());
                         },
                         Ok(Event::End(ref e))  => {
                             writer.write_event(Event::End(e.to_owned())).is_ok();
@@ -276,9 +263,21 @@ mod tests {
         let two = Two::new();
         let swinstall_stack_elt_tags = r#"<elt action="install" datetime="20180702-144204" hash="194f835569a79ba433" version="3"/>"#;
         // we ultimately want a call like:
+        //
+        // let path = "/dd/facility/etc";
+        // let filename = "./packages.xml";
+        // record_install(path, filename, NaiveDateTime.now())?;
+        //
+        // or
+        //
         // let file = "/dd/facility/etc/packages.xml";
-        // install_file(file)
-        // where fn install_file()
+        // record_rollback(file)?;
+        //
+        // or
+        //
+        // let file = "/dd/facility/etc/packages.xml";
+        // rollforward(file)?;
+
         let mut writer = Writer::new(Cursor::new(Vec::new()));
         let mut reader = Reader::from_str(swinstall_stack_elt_tags);
         let action = Action::Install;
