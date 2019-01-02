@@ -183,7 +183,7 @@ impl SwinstallCurrent for Two {
         W: std::io::Write
     {
         match action {
-            Action::Install(ref version) => {
+            Action::Install => {
                 let mut cnt = 0;
                 let mut buf = Vec::new();
 
@@ -273,7 +273,6 @@ mod tests {
 
     #[test]
     fn update_two() {
-
         let two = Two::new();
         let swinstall_stack_elt_tags = r#"<elt action="install" datetime="20180702-144204" hash="194f835569a79ba433" version="3"/>"#;
         // we ultimately want a call like:
@@ -282,8 +281,8 @@ mod tests {
         // where fn install_file()
         let mut writer = Writer::new(Cursor::new(Vec::new()));
         let mut reader = Reader::from_str(swinstall_stack_elt_tags);
-        let action = Action::Install("4".to_string());
-        let elem = Elt::new(action.to_string(), "20190101-113000".to_string(), "124a835569a79ba433".to_string(), action.version());
+        let action = Action::Install;
+        let elem = Elt::new(action.to_string(), "20190101-113000".to_string(), "124a835569a79ba433".to_string(), "4".to_string());
         //
         let result = two.update( action,
             &mut reader,
