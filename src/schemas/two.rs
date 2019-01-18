@@ -205,11 +205,23 @@ impl SwinstallCurrent for Two {
                                 let tag_vec = TAG_ELT.to_vec();
                                 let tag_len = tag_vec.len();
                                 let mut bselem = BytesStart::owned(tag_vec, tag_len);
-                                bselem.push_attribute(Attribute::from(("action", elem.action.as_str())));
-                                bselem.push_attribute(Attribute::from( ("datetime", elem.datetime.as_str()) ));
-                                bselem.push_attribute(Attribute::from(("hash", elem.hash.as_str()) ));
-                                bselem.push_attribute(Attribute::from(("version", elem.version.as_str())));
-                                writer.write_event(Event::Empty(bselem)).is_ok();
+                                bselem.push_attribute(
+                                    Attribute::from(("action", elem.action.as_str()))
+                                );
+                                bselem.push_attribute(Attribute::from(
+                                    ("datetime", elem.datetime.as_str()))
+                                );
+                                bselem.push_attribute(
+                                    Attribute::from(("hash", elem.hash.as_str()) )
+                                );
+                                bselem.push_attribute(
+                                    Attribute::from(("version", elem.version.as_str()))
+                                );
+
+                                writer.write_event(
+                                    Event::Empty(bselem)
+                                ).is_ok();
+
                                 cnt +=1;
                             }
 
