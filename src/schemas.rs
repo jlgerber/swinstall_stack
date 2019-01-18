@@ -27,13 +27,25 @@ impl SwinstallElementWrapper for ReturnElt {
 
     fn from_attrs<'a>(version: &str, attrs: Attributes<'a>) -> Result<Self, SwInstallError> {
         match version {
-            "1" => Ok(ReturnElt::One(one::Elt::from_attrs( attrs)?)),
-            "2" => Ok(ReturnElt::Two(two::Elt::from_attrs(attrs)?)),
-            _ => Err(SwInstallError::RuntimeError(String::from("unable to instantiate Elt")))
+            "1" => Ok(
+                ReturnElt::One(
+                    one::Elt::from_attrs(attrs)?
+                )
+            ),
+            "2" => Ok(
+                ReturnElt::Two(
+                    two::Elt::from_attrs(attrs)?
+                )
+            ),
+            _ => Err(
+                SwInstallError::RuntimeError(
+                    String::from("unable to instantiate Elt")
+                )
+            )
         }
     }
 
-    fn version(&self) -> String {
+    fn version( &self ) -> String {
         match *self {
             ReturnElt::One(ref e) => e.version(),
             ReturnElt::Two(ref e) => e.version(),
